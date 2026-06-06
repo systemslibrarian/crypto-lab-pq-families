@@ -1,0 +1,205 @@
+/* extra.css — components specific to the PQ families lab.
+   Reuses the variable palette defined in style.css (no new colors). */
+
+.maturity-chip {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+  background: var(--panel-strong);
+  border: 1px solid var(--line);
+}
+
+.maturity-chip.scenario-status--valid {
+  background: color-mix(in oklab, var(--accent-4) 18%, transparent);
+  color: var(--accent-4);
+}
+
+.maturity-chip.scenario-status--pending {
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+  color: var(--accent);
+}
+
+.maturity-chip.scenario-status--invalid {
+  background: var(--warning-bg);
+  color: var(--accent-2);
+  border-color: var(--warning-border);
+}
+
+/* family explorer */
+.family-tabs {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 22px;
+}
+
+.family-detail {
+  margin-top: 24px;
+}
+
+.family-headline {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(220px, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+
+.family-name {
+  margin: 0 0 8px;
+  color: var(--ink-strong);
+  font-size: 1.5rem;
+}
+
+.family-summary {
+  margin-top: 18px;
+  font-size: 1.02rem;
+}
+
+.confidence-meter {
+  padding: 18px;
+  border-radius: 20px;
+  background: var(--metric-bg);
+  color: var(--metric-fg);
+}
+
+.confidence-meter .hero-metric-label {
+  color: var(--metric-muted);
+}
+
+.confidence-track {
+  height: 12px;
+  margin: 12px 0 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-4));
+  transition: width 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.confidence-value {
+  margin: 0;
+  color: var(--metric-fg);
+}
+
+.trait-list {
+  margin: 14px 0 0;
+  padding-left: 0;
+  list-style: none;
+  display: grid;
+  gap: 10px;
+}
+
+.trait-list li {
+  position: relative;
+  padding-left: 26px;
+  color: var(--ink-soft);
+  line-height: 1.55;
+}
+
+.trait-list li::before {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-weight: 700;
+}
+
+.trait-list--good li::before {
+  content: '\2713';
+  color: var(--accent-4);
+}
+
+.trait-list--bad li::before {
+  content: '\2717';
+  color: var(--accent-2);
+}
+
+/* size chart */
+.size-chart {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.size-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 240px) 1fr minmax(70px, auto);
+  gap: 16px;
+  align-items: center;
+}
+
+.size-label {
+  display: grid;
+  gap: 2px;
+}
+
+.size-name {
+  color: var(--ink-strong);
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.size-fam {
+  color: var(--ink-soft);
+  font-size: 0.78rem;
+}
+
+.size-track {
+  height: 22px;
+  border-radius: 999px;
+  background: var(--input-bg);
+  border: 1px solid var(--line);
+  overflow: hidden;
+}
+
+.size-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 800ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.size-fill--lattice { background: linear-gradient(90deg, var(--accent), color-mix(in oklab, var(--accent) 55%, black)); }
+.size-fill--code { background: linear-gradient(90deg, var(--accent-2), color-mix(in oklab, var(--accent-2) 55%, black)); }
+.size-fill--hash { background: linear-gradient(90deg, var(--accent-3), color-mix(in oklab, var(--accent-3) 55%, black)); }
+.size-fill--multivariate { background: linear-gradient(90deg, var(--accent-4), color-mix(in oklab, var(--accent-4) 55%, black)); }
+.size-fill--isogeny { background: linear-gradient(90deg, var(--ink-soft), color-mix(in oklab, var(--ink-soft) 55%, black)); }
+
+.size-value {
+  margin: 0;
+  text-align: right;
+  color: var(--ink-strong);
+  font-size: 0.86rem;
+}
+
+.scripture {
+  margin: 18px 0 0;
+  color: var(--ink-soft);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+@media (max-width: 1024px) {
+  .family-headline {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .size-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .size-value {
+    text-align: left;
+  }
+}
