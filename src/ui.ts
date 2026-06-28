@@ -2083,6 +2083,13 @@ function renderFooter(): HTMLElement {
         <p class="panel-copy">Educational use only. Figures are representative parameter sets \u2014 not deployment values. Use a vetted library (liboqs, BouncyCastle, .NET, BoringSSL) for production.</p>
       </div>
     </div>
+    <p class="related-demos">Related demos:
+      <a href="https://systemslibrarian.github.io/crypto-lab-kyber-vault/">crypto-lab-kyber-vault</a>,
+      <a href="https://systemslibrarian.github.io/crypto-lab-dilithium-seal/">crypto-lab-dilithium-seal</a>,
+      <a href="https://systemslibrarian.github.io/crypto-lab-sphincs-ledger/">crypto-lab-sphincs-ledger</a>,
+      <a href="https://systemslibrarian.github.io/crypto-lab-mceliece-gate/">crypto-lab-mceliece-gate</a>,
+      <a href="https://systemslibrarian.github.io/crypto-lab-hybrid-guide/">crypto-lab-hybrid-guide</a>
+    </p>
     <p class="scripture">"So whether you eat or drink or whatever you do, do it all for the glory of God." \u2014 1 Corinthians 10:31</p>
   `;
 	return footer;
