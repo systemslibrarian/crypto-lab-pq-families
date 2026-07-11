@@ -981,7 +981,7 @@ function renderLatticeViz(): HTMLElement {
     </div>
 
     <div class="lat-wrap">
-      <svg class="lat-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Interactive 2D lattice visualisation">
+      <svg class="lat-svg" viewBox="0 0 ${W} ${H}" role="group" aria-label="Interactive 2D lattice visualisation">
         <defs>
           <marker id="lat-arrow-1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
             <path d="M0,0 L10,5 L0,10 z" fill="var(--accent)" />
@@ -1002,8 +1002,8 @@ function renderLatticeViz(): HTMLElement {
         <line class="lat-short" stroke="var(--accent-3)" stroke-width="3" marker-end="url(#lat-arrow-s)" />
         <line class="lat-b1" stroke="var(--accent)" stroke-width="3" marker-end="url(#lat-arrow-1)" />
         <line class="lat-b2" stroke="var(--accent-2)" stroke-width="3" marker-end="url(#lat-arrow-2)" />
-        <circle class="lat-handle lat-handle--b1" r="9" fill="var(--accent)" tabindex="0" aria-label="Basis vector b1 endpoint" />
-        <circle class="lat-handle lat-handle--b2" r="9" fill="var(--accent-2)" tabindex="0" aria-label="Basis vector b2 endpoint" />
+        <circle class="lat-handle lat-handle--b1" r="9" fill="var(--accent)" tabindex="0" role="button" aria-label="Basis vector b1 endpoint" />
+        <circle class="lat-handle lat-handle--b2" r="9" fill="var(--accent-2)" tabindex="0" role="button" aria-label="Basis vector b2 endpoint" />
       </svg>
 
       <div class="lat-readout">
