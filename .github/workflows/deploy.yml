@@ -25,6 +25,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Unit tests (vitest — crypto KATs, ISD, lattice, data corpus)
+        run: npm test
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
       - name: Accessibility gate (axe-core, WCAG A/AA)

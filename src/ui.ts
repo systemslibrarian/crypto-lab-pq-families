@@ -14,6 +14,21 @@ import {
 	type SecurityCategory,
 	type TimelineKind,
 } from './data.ts';
+import {
+	bitAt,
+	determinant as latDeterminant,
+	lagrangeGaussStep as latReduceStep,
+	lamportKeygen,
+	lamportSign,
+	lamportVerify,
+	log2Binom,
+	norm as vecNorm,
+	orthogonalityDefect,
+	shortestVec as latShortestVec,
+	type LamportKeypair,
+	type LamportSignature,
+	type Vec2,
+} from './crypto.ts';
 
 // URL hash routing — `#family=<id>&pins=<comma-list>` lets you deep-link
 // to a specific family, persist pinned schemes, share the view, and survive
@@ -1038,48 +1053,17 @@ function renderLatticeViz(): HTMLElement {
 		return { x: cx + v.x * SCALE, y: cy - v.y * SCALE };
 	}
 
-	function norm(v: { x: number; y: number }): number {
-		return Math.sqrt(v.x * v.x + v.y * v.y);
-	}
-
-	// Brute-force shortest non-zero lattice vector for small RANGE — trivially
-	// correct in 2D; the visual point is the geometry, not the algorithm.
-	function shortestVec(): { x: number; y: number; a: number; b: number } {
-		let best: { x: number; y: number; a: number; b: number; len: number } = {
-			x: b1.x,
-			y: b1.y,
-			a: 1,
-			b: 0,
-			len: norm(b1),
-		};
-		for (let a = -RANGE; a <= RANGE; a++) {
-			for (let b = -RANGE; b <= RANGE; b++) {
-				if (a === 0 && b === 0) continue;
-				const v = { x: a * b1.x + b * b2.x, y: a * b1.y + b * b2.y };
-				const len = norm(v);
-				if (len > 0 && len < best.len - 1e-9) {
-					best = { ...v, a, b, len };
-				}
-			}
-		}
-		const { x, y, a, b } = best;
-		return { x, y, a, b };
-	}
-
-	function determinant(): number {
-		return Math.abs(b1.x * b2.y - b1.y * b2.x);
-	}
+	// Geometry + reduction all delegate to ./crypto.ts (shared with the tests).
+	const norm = (v: Vec2): number => vecNorm(v);
+	const shortestVec = (): { x: number; y: number; a: number; b: number } =>
+		latShortestVec(b1, b2, RANGE);
+	const determinant = (): number => latDeterminant(b1, b2);
 
 	// One step of Lagrange–Gauss reduction in 2D.
 	function lagrangeGaussStep(): void {
-		// Always have ‖b1‖ ≤ ‖b2‖
-		if (norm(b2) < norm(b1)) {
-			const tmp = b1;
-			b1 = b2;
-			b2 = tmp;
-		}
-		const mu = Math.round((b1.x * b2.x + b1.y * b2.y) / (b1.x * b1.x + b1.y * b1.y));
-		b2 = { x: b2.x - mu * b1.x, y: b2.y - mu * b1.y };
+		const r = latReduceStep(b1, b2);
+		b1 = r.b1;
+		b2 = r.b2;
 	}
 
 	function format(v: { x: number; y: number }): string {
@@ -1145,7 +1129,7 @@ function renderLatticeViz(): HTMLElement {
 		(section.querySelector('.lat-prod') as HTMLElement).textContent = (norm(b1) * norm(b2)).toFixed(3);
 		const det = determinant();
 		(section.querySelector('.lat-det') as HTMLElement).textContent = det.toFixed(3);
-		const defect = det > 0 ? (norm(b1) * norm(b2)) / det : Infinity;
+		const defect = orthogonalityDefect(b1, b2);
 		(section.querySelector('.lat-defect') as HTMLElement).textContent = Number.isFinite(defect)
 			? defect.toFixed(3)
 			: '∞';
@@ -1272,18 +1256,8 @@ function renderLatticeViz(): HTMLElement {
 // C(n, t) / C(n-k, t) operations, ignoring polynomial factors.
 //
 // log₂ C(n, k) is computed directly so n in the thousands stays numerically
-// stable (no huge intermediate factorials).
-function log2Binom(n: number, k: number): number {
-	if (k < 0 || k > n) return Number.NEGATIVE_INFINITY;
-	if (k === 0 || k === n) return 0;
-	const kk = Math.min(k, n - k);
-	let r = 0;
-	for (let i = 1; i <= kk; i++) {
-		r += Math.log2((n - i + 1) / i);
-	}
-	return r;
-}
-
+// stable — the implementation lives in ./crypto.ts (log2Binom) and is shared
+// with the unit tests.
 function renderISDCalc(): HTMLElement {
 	const section = el('section', 'lab-section');
 
@@ -1299,9 +1273,9 @@ function renderISDCalc(): HTMLElement {
     <div class="section-heading-row">
       <div>
         <p class="section-kicker">Calculate</p>
-        <h2>ISD Work: Why McEliece Hits Cat 1</h2>
+        <h2>ISD Work: Prange Attack Cost for Code Parameters</h2>
         <p class="section-footnote">
-          Each Prange ISD trial succeeds with probability C(n−k, t) / C(n, t), so expected work is <span class="mono-inline">C(n, t) / C(n−k, t)</span>. Slide n, k, t and watch bits move into NIST's category floors.
+          Each Prange ISD trial succeeds with probability C(n−k, t) / C(n, t), so expected work is <span class="mono-inline">C(n, t) / C(n−k, t)</span>. Slide n, k, t and watch the cost move relative to NIST's category floors. Note that <em>raw</em> Prange (1962) is the weakest ISD variant: at the McEliece parameter sets it lands close to — and for the higher sets slightly below — the nominal floors. The parameter sets were sized for margin against the <em>best-known</em> ISD, not textbook Prange, so this is an order-of-magnitude teaching tool, not the standardisation analysis.
         </p>
       </div>
     </div>
@@ -1390,17 +1364,21 @@ function renderISDCalc(): HTMLElement {
 		(section.querySelector('.isd-prob') as HTMLElement).textContent = probText;
 		(section.querySelector('.isd-trials') as HTMLElement).textContent = trialsText;
 
+		// Compare raw Prange cost against the NIST classical floors descriptively.
+		// Raw Prange is the weakest ISD, so "≥ floor" here means the *textbook*
+		// attack already exceeds it; the real parameter sets have margin against
+		// stronger ISD variants that this simple estimate does not model.
 		const cat = !valid
 			? '—'
 			: bits >= 272
-				? '✓ above Cat 5 floor (2^272 classical)'
+				? 'Prange cost ≥ Cat 5 floor (2^272 classical)'
 				: bits >= 207
-					? '✓ above Cat 3 floor (2^207 classical)'
+					? 'Prange cost ≥ Cat 3 floor (2^207 classical)'
 					: bits >= 143
-						? '✓ above Cat 1 floor (2^143 classical)'
+						? 'Prange cost ≥ Cat 1 floor (2^143 classical)'
 						: bits >= 100
-							? '◔ approaching Cat 1 floor'
-							: '✗ below Cat 1 floor — not PQC-grade';
+							? 'Prange cost near Cat 1 floor (best-known ISD is stronger)'
+							: 'Prange cost < 2^100 — well below PQC-grade';
 		const catEl = section.querySelector('.isd-cat') as HTMLElement;
 		catEl.textContent = cat;
 		catEl.className = !valid
@@ -1525,72 +1503,10 @@ function renderImplStatus(): HTMLElement {
 // One-time only: signing two messages reveals both halves at every position
 // where the digests differ, which is the whole point of XMSS/LMS/SPHINCS+
 // wrapping this construction in a Merkle / hypertree.
-
-type LamportKeypair = { priv: Uint8Array[][]; pub: Uint8Array[][] };
-type LamportSignature = Uint8Array[];
-
-// crypto.subtle.digest expects BufferSource. TS 5.7+ types Uint8Array as
-// Uint8Array<ArrayBufferLike> by default which isn't structurally assignable,
-// so we route through a single cast helper rather than scattering them.
-function asBuf(b: Uint8Array): BufferSource {
-	return b as unknown as BufferSource;
-}
-
-async function lamportKeygen(): Promise<LamportKeypair> {
-	const flatPriv: Uint8Array[] = [];
-	for (let i = 0; i < 512; i++) {
-		const s = new Uint8Array(32);
-		crypto.getRandomValues(s);
-		flatPriv.push(s);
-	}
-	const hashes = await Promise.all(flatPriv.map((s) => crypto.subtle.digest('SHA-256', asBuf(s))));
-	const priv: Uint8Array[][] = [];
-	const pub: Uint8Array[][] = [];
-	for (let i = 0; i < 256; i++) {
-		priv.push([flatPriv[2 * i], flatPriv[2 * i + 1]]);
-		pub.push([new Uint8Array(hashes[2 * i]), new Uint8Array(hashes[2 * i + 1])]);
-	}
-	return { priv, pub };
-}
-
-async function sha256(bytes: Uint8Array): Promise<Uint8Array> {
-	return new Uint8Array(await crypto.subtle.digest('SHA-256', asBuf(bytes)));
-}
-
-async function digestMessage(msg: string): Promise<Uint8Array> {
-	return sha256(new TextEncoder().encode(msg));
-}
-
-function bitAt(digest: Uint8Array, i: number): 0 | 1 {
-	return ((digest[i >> 3] >> (7 - (i & 7))) & 1) as 0 | 1;
-}
-
-async function lamportSign(kp: LamportKeypair, msg: string): Promise<{ sig: LamportSignature; digest: Uint8Array }> {
-	const digest = await digestMessage(msg);
-	const sig: LamportSignature = [];
-	for (let i = 0; i < 256; i++) {
-		sig.push(kp.priv[i][bitAt(digest, i)]);
-	}
-	return { sig, digest };
-}
-
-async function lamportVerify(
-	pub: Uint8Array[][],
-	msg: string,
-	sig: LamportSignature,
-): Promise<{ ok: boolean; digest: Uint8Array }> {
-	const digest = await digestMessage(msg);
-	const hashes = await Promise.all(sig.map((s) => crypto.subtle.digest('SHA-256', asBuf(s))));
-	for (let i = 0; i < 256; i++) {
-		const expected = pub[i][bitAt(digest, i)];
-		const actual = new Uint8Array(hashes[i]);
-		if (expected.length !== actual.length) return { ok: false, digest };
-		for (let k = 0; k < expected.length; k++) {
-			if (expected[k] !== actual[k]) return { ok: false, digest };
-		}
-	}
-	return { ok: true, digest };
-}
+//
+// The Lamport keygen/sign/verify primitives and the bit-indexing helper live
+// in ./crypto.ts and are shared verbatim with the unit tests — the demo below
+// runs exactly the code the KATs cover.
 
 function shortHex(bytes: Uint8Array, n = 4): string {
 	let out = '';
