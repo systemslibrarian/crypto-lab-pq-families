@@ -177,38 +177,21 @@ function securityChip(cat?: SecurityCategory): string {
 }
 
 function renderHero(): HTMLElement {
-	const hero = el('header', 'hero-panel');
+	const hero = el('header', 'cl-hero');
 	hero.innerHTML = `
     <div class="hero-actions">
       <button id="copy-link" class="copy-link" type="button" aria-label="Copy link to this view"><span aria-hidden="true">\u{1F517}</span> Copy link</button>
       <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">\u{1F319}</button>
     </div>
-    <div class="hero-copy">
-      <a class="portfolio-badge" href="https://github.com/systemslibrarian?tab=repositories&q=crypto-lab">crypto-lab \u00b7 portfolio</a>
-      <p class="eyebrow">Post-Quantum Cryptography</p>
-      <h1>PQ Families</h1>
-      <p class="hero-text">
-        Five mathematical families are competing to secure the post-quantum era. This lab
-        compares lattice, code-based, hash-based, multivariate, and isogeny schemes side by
-        side \u2014 their hard problems, key and signature sizes, NIST status, and why
-        structured lattices won the first round of standardisation.
-      </p>
-      <details class="why-details">
-        <summary>Why does this matter?</summary>
-        <p>
-          A large-scale quantum computer running Shor\u2019s algorithm would break RSA and
-          elliptic-curve cryptography outright. NIST\u2019s response is a portfolio of families
-          built on problems believed hard for quantum machines. Two of these families have
-          already been broken \u2014 a reminder that \u201Cpost-quantum\u201D is a moving target,
-          not a finish line.
-        </p>
-      </details>
+    <div class="cl-hero-main">
+      <h1 class="cl-hero-title">PQ Families</h1>
+      <p class="cl-hero-sub">Lattice \u00b7 Code \u00b7 Hash \u00b7 Multivariate \u00b7 Isogeny \u00b7 NIST PQC</p>
+      <p class="cl-hero-desc">Compare the five post-quantum families side by side \u2014 their hard problems, key and signature sizes, NIST status, and the tradeoffs that decided which won standardisation.</p>
     </div>
-    <div class="hero-metric-card">
-      <p class="hero-metric-label">NIST standards (2024\u20132025)</p>
-      <p class="hero-metric-value">FIPS 203 \u00b7 ML-KEM<br/>FIPS 204 \u00b7 ML-DSA<br/>FIPS 205 \u00b7 SLH-DSA<br/>HQC \u00b7 code-based KEM</p>
-      <p class="hero-metric-note">3 of 5 families standing \u00b7 2 broken since 2022</p>
-    </div>
+    <aside class="cl-hero-why" aria-label="Why it matters">
+      <span class="cl-hero-why-label">WHY IT MATTERS</span>
+      <p class="cl-hero-why-text">Shor\u2019s algorithm on a large quantum computer breaks RSA and elliptic curves outright. NIST hedges with a portfolio of quantum-hard families \u2014 but two have already fallen, so \u201Cpost-quantum\u201D is a moving target.</p>
+    </aside>
   `;
 	return hero;
 }
