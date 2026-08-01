@@ -484,7 +484,7 @@ export const FAMILIES: Family[] = [
 				summary: 'MinRank-based key recovery using the "MinRank" framework that has since become the dominant tool against multivariate trapdoors.',
 			},
 			{
-				year: 2008,
+				year: 2007,
 				name: 'Dubois\u2013Fouque\u2013Stern\u2013Shamir: SFLASH break',
 				summary: 'Demonstrated that even a NESSIE-recommended signature could fall to differential cryptanalysis of the central map.',
 			},
