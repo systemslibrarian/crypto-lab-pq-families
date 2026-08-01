@@ -2038,15 +2038,22 @@ function writeAudience(v: 'all' | Audience): void {
 export function mountApp(root: HTMLDivElement): void {
 	const shell = el('div', 'page-shell');
 
-	shell.append(renderHero(), renderStartHere(), renderPinnedDrawer(), renderStickyNav());
+	shell.append(renderHero());
+
+	// WCAG 1.3.1 — everything between the hero and the footer is the page's
+	// primary content, so it belongs in a main landmark.
+	const mainRegion = el('main');
+	mainRegion.append(renderStartHere(), renderPinnedDrawer(), renderStickyNav());
 
 	for (const sec of SECTIONS) {
 		const node = sec.render();
 		node.id = sec.id;
 		node.dataset.navLabel = sec.label;
 		node.dataset.audience = sec.audience.join(' ');
-		shell.appendChild(node);
+		mainRegion.appendChild(node);
 	}
+
+	shell.appendChild(mainRegion);
 
 	shell.appendChild(renderFooter());
 
