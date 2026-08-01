@@ -14,6 +14,7 @@ import {
 	orthogonalityDefect,
 	sha256,
 	shortestVec,
+	shortestVector,
 	type Vec2,
 } from './crypto.ts';
 
@@ -287,5 +288,67 @@ describe('Lagrange–Gauss reduction', () => {
 		const brute = shortestVec(b1, b2, 8);
 		// The first reduced vector is a shortest lattice vector in 2D.
 		expect(norm(r.b1)).toBeCloseTo(norm(brute), 6);
+	});
+
+	// shortestVector() exists because shortestVec() searches a bounded box and a
+	// skewed basis can hide the true answer outside it. These pin both halves of
+	// that claim: that the bounded search really does fail, and that the exact
+	// one really does succeed.
+	it('shortestVector beats the bounded search on the skewed basis from its docs', () => {
+		const b1: Vec2 = { x: 0.9, y: 0 };
+		const b2: Vec2 = { x: 10, y: 0.5 };
+
+		// The bounded search misses it: -11*b1 + b2 needs |a| = 11, outside range 10.
+		const brute = shortestVec(b1, b2, 10);
+		expect(norm(brute)).toBeCloseTo(0.9, 6);
+
+		const exact = shortestVector(b1, b2);
+		expect(exact).not.toBeNull();
+		// (0.1, 0.5), norm sqrt(0.26) — genuinely shorter than b1.
+		expect(norm({ x: exact!.x, y: exact!.y })).toBeCloseTo(Math.sqrt(0.26), 6);
+		expect(norm({ x: exact!.x, y: exact!.y })).toBeLessThan(norm(brute));
+	});
+
+	it('shortestVector returns integer coordinates that rebuild the vector from the ORIGINAL basis', () => {
+		// The UI names the winning combination, so (a, b) has to be the real
+		// transform of the input basis, not of some intermediate reduced one.
+		const cases: Array<[Vec2, Vec2]> = [
+			[{ x: 0.9, y: 0 }, { x: 10, y: 0.5 }],
+			[{ x: 2, y: 3 }, { x: 5, y: 1 }],
+			[{ x: 1, y: 0 }, { x: 3, y: 1 }],
+			[{ x: 13, y: 7 }, { x: 21, y: 11 }],
+		];
+		for (const [b1, b2] of cases) {
+			const v = shortestVector(b1, b2);
+			expect(v).not.toBeNull();
+			expect(Number.isInteger(v!.a)).toBe(true);
+			expect(Number.isInteger(v!.b)).toBe(true);
+			expect(v!.a * b1.x + v!.b * b2.x).toBeCloseTo(v!.x, 9);
+			expect(v!.a * b1.y + v!.b * b2.y).toBeCloseTo(v!.y, 9);
+			// Non-zero: the zero vector is excluded by definition.
+			expect(norm({ x: v!.x, y: v!.y })).toBeGreaterThan(0);
+		}
+	});
+
+	it('shortestVector is never longer than a wide brute-force search', () => {
+		// Exactness check over many bases. Where the box is wide enough to contain
+		// the answer the two must agree; where it is not, the exact one must win.
+		for (let i = 1; i <= 60; i++) {
+			// Deterministic spread of bases, some well-conditioned, some skewed.
+			const b1: Vec2 = { x: ((i * 7) % 11) + 1, y: (i * 3) % 5 };
+			const b2: Vec2 = { x: (i * 5) % 13, y: ((i * 11) % 7) + 1 };
+			const exact = shortestVector(b1, b2);
+			if (exact === null) continue; // degenerate basis, covered separately
+			const brute = shortestVec(b1, b2, 12);
+			expect(norm({ x: exact.x, y: exact.y })).toBeLessThanOrEqual(norm(brute) + 1e-9);
+		}
+	});
+
+	it('shortestVector returns null for a degenerate (rank-1) basis', () => {
+		// Parallel vectors span a line, not a 2D lattice — there is no well-defined
+		// shortest non-zero vector at floating-point precision, so say so.
+		expect(shortestVector({ x: 1, y: 2 }, { x: 2, y: 4 })).toBeNull();
+		expect(shortestVector({ x: 3, y: 0 }, { x: -6, y: 0 })).toBeNull();
+		expect(shortestVector({ x: 0, y: 0 }, { x: 1, y: 1 })).toBeNull();
 	});
 });

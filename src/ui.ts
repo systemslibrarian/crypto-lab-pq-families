@@ -24,7 +24,7 @@ import {
 	log2Binom,
 	norm as vecNorm,
 	orthogonalityDefect,
-	shortestVec as latShortestVec,
+	shortestVector as latShortestVector,
 	type LamportKeypair,
 	type LamportSignature,
 	type Vec2,
@@ -1038,9 +1038,12 @@ function renderLatticeViz(): HTMLElement {
 	}
 
 	// Geometry + reduction all delegate to ./crypto.ts (shared with the tests).
+	// The shortest vector is solved exactly (Lagrange–Gauss), not searched over a
+	// coefficient box: a skewed basis can put the winner well outside |a|,|b| ≤ 10,
+	// and the caption promises "the shortest", not "the shortest we looked at".
 	const norm = (v: Vec2): number => vecNorm(v);
-	const shortestVec = (): { x: number; y: number; a: number; b: number } =>
-		latShortestVec(b1, b2, RANGE);
+	const shortestVec = (): { x: number; y: number; a: number; b: number } | null =>
+		latShortestVector(b1, b2);
 	const determinant = (): number => latDeterminant(b1, b2);
 
 	// One step of Lagrange–Gauss reduction in 2D.
@@ -1082,11 +1085,18 @@ function renderLatticeViz(): HTMLElement {
 			`${o.x},${o.y} ${p1.x},${p1.y} ${p12.x},${p12.y} ${p2.x},${p2.y}`,
 		);
 
+		// Shortest vector first: its coefficients set how far the dot grid has to
+		// reach, so the highlighted arrow always lands on a drawn lattice point.
+		const s = shortestVec();
+		const dotRange = s
+			? Math.min(60, Math.max(RANGE, Math.abs(s.a) + 1, Math.abs(s.b) + 1))
+			: RANGE;
+
 		// lattice points (excluding origin)
 		const pointsHost = svg.querySelector('.lat-points') as SVGGElement;
 		const dots: string[] = [];
-		for (let a = -RANGE; a <= RANGE; a++) {
-			for (let b = -RANGE; b <= RANGE; b++) {
+		for (let a = -dotRange; a <= dotRange; a++) {
+			for (let b = -dotRange; b <= dotRange; b++) {
 				const vx = a * b1.x + b * b2.x;
 				const vy = a * b1.y + b * b2.y;
 				const px = cx + vx * SCALE;
@@ -1097,19 +1107,26 @@ function renderLatticeViz(): HTMLElement {
 					`<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${isOrigin ? 4 : 2.4}" fill="${isOrigin ? 'var(--ink-strong)' : 'var(--ink-soft)'}" opacity="${isOrigin ? '1' : '0.55'}" />`,
 				);
 			}
+			if (dots.length > 2500) break;
 		}
 		pointsHost.innerHTML = dots.join('');
 
-		// shortest vector
-		const s = shortestVec();
-		const ps = toScreen(s);
-		setLine('.lat-short', ps);
+		// shortest vector — hidden entirely when the basis is degenerate, since
+		// there is then no 2D lattice for it to be the shortest vector of.
+		const shortLine = svg.querySelector('.lat-short') as SVGLineElement;
+		if (s) {
+			shortLine.style.display = '';
+			setLine('.lat-short', toScreen(s));
+		} else {
+			shortLine.style.display = 'none';
+		}
 
 		// readouts
 		(section.querySelector('.lat-b1-text') as HTMLElement).textContent = format(b1);
 		(section.querySelector('.lat-b2-text') as HTMLElement).textContent = format(b2);
-		(section.querySelector('.lat-short-text') as HTMLElement).textContent =
-			`${s.a}·b₁ + ${s.b}·b₂ = (${s.x.toFixed(2)}, ${s.y.toFixed(2)}) · ‖·‖ = ${norm(s).toFixed(3)}`;
+		(section.querySelector('.lat-short-text') as HTMLElement).textContent = s
+			? `${s.a}·b₁ + ${s.b}·b₂ = (${s.x.toFixed(2)}, ${s.y.toFixed(2)}) · ‖·‖ = ${norm(s).toFixed(3)}`
+			: 'undefined — b₁ and b₂ are parallel, so they span a line, not a 2D lattice';
 		(section.querySelector('.lat-prod') as HTMLElement).textContent = (norm(b1) * norm(b2)).toFixed(3);
 		const det = determinant();
 		(section.querySelector('.lat-det') as HTMLElement).textContent = det.toFixed(3);

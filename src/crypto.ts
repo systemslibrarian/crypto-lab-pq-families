@@ -146,8 +146,14 @@ export function orthogonalityDefect(b1: Vec2, b2: Vec2): number {
 	return det > 0 ? (norm(b1) * norm(b2)) / det : Infinity;
 }
 
-// Brute-force shortest non-zero lattice vector within a coefficient range —
-// trivially correct for the small 2D visual and a useful test oracle.
+// Brute-force shortest non-zero lattice vector within a coefficient range.
+//
+// NOT a general shortest-vector routine: it only searches |a|, |b| <= range, and
+// a skewed basis can put the true shortest vector outside that box. Example:
+// b1 = (0.9, 0), b2 = (10, 0.5) has shortest vector -11*b1 + b2 = (0.1, 0.5),
+// which a range-10 search misses entirely, returning b1 (0.900) in place of the
+// real answer (0.510). Kept as a test oracle for well-conditioned bases; use
+// shortestVector() below for anything that claims to be *the* shortest vector.
 export function shortestVec(
 	b1: Vec2,
 	b2: Vec2,
@@ -179,6 +185,53 @@ export function lagrangeGaussStep(b1: Vec2, b2: Vec2): { b1: Vec2; b2: Vec2 } {
 	}
 	const mu = Math.round(dot(b1, b2) / dot(b1, b1));
 	return { b1, b2: { x: b2.x - mu * b1.x, y: b2.y - mu * b1.y } };
+}
+
+export type ShortestVector = { x: number; y: number; a: number; b: number };
+
+/**
+ * The exact shortest non-zero vector of the 2D lattice L(b1, b2), with the
+ * integer coordinates (a, b) that produce it from the ORIGINAL basis.
+ *
+ * Lagrange–Gauss reduction terminates with ‖v1‖ ≤ ‖v2‖ and |⟨v1, v2⟩| ≤ ‖v1‖²/2,
+ * and in two dimensions that v1 is provably a shortest non-zero lattice vector —
+ * no search bound, no missed answers. Tracking the unimodular transform
+ * alongside the vectors is what lets the caller name the winning combination.
+ *
+ * Returns null for a degenerate basis (b1 and b2 parallel, det ≈ 0). The point
+ * set is then rank 1, not a 2D lattice, and "the shortest non-zero vector" has
+ * no well-defined answer at floating-point precision — better to say so than to
+ * highlight an arbitrary vector.
+ */
+export function shortestVector(b1: Vec2, b2: Vec2): ShortestVector | null {
+	const scale = norm(b1) * norm(b2);
+	if (!(scale > 0) || determinant(b1, b2) <= 1e-9 * scale) {
+		return null;
+	}
+
+	let v1 = b1;
+	let v2 = b2;
+	let c1 = { a: 1, b: 0 };
+	let c2 = { a: 0, b: 1 };
+	const swapIfNeeded = (): void => {
+		if (norm(v2) < norm(v1)) {
+			[v1, v2] = [v2, v1];
+			[c1, c2] = [c2, c1];
+		}
+	};
+
+	for (let i = 0; i < 1000; i++) {
+		swapIfNeeded();
+		const d = dot(v1, v1);
+		if (d === 0) return null;
+		const mu = Math.round(dot(v1, v2) / d);
+		if (mu === 0) break;
+		v2 = { x: v2.x - mu * v1.x, y: v2.y - mu * v1.y };
+		c2 = { a: c2.a - mu * c1.a, b: c2.b - mu * c1.b };
+	}
+	swapIfNeeded();
+
+	return { x: v1.x, y: v1.y, a: c1.a, b: c1.b };
 }
 
 // Iterate lagrangeGaussStep to a fixed point (the fully reduced basis).
