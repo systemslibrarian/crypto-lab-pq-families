@@ -2071,7 +2071,9 @@ html[data-audience='executive'] .lab-section[data-audience~='executive']::before
 
 .lamport-msg-wrap input[type='text'] {
   padding: 10px 14px;
-  border: 1px solid var(--line);
+  /* --border-strong, not --line: WCAG 2.1 SC 1.4.11. Achieved >=3.26:1 (light) and
+     >=3.42:1 (dark) against every surface this field sits on. */
+  border: 1px solid var(--border-strong);
   border-radius: 12px;
   background: var(--input-bg);
   color: var(--ink-strong);
