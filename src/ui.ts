@@ -256,7 +256,7 @@ function renderExplorer(): HTMLElement {
         <li class="attack-item">
           <span class="attack-year mono-inline">${a.year}</span>
           <div class="attack-body">
-            <p class="attack-name">${a.name}</p>
+            <p class="attack-name">${a.name}${a.venue ? ` <span class="attack-venue">\u2014 ${a.venue}</span>` : ''}</p>
             <p class="panel-copy attack-summary">${a.summary}</p>
           </div>
         </li>`,
@@ -323,6 +323,7 @@ function renderExplorer(): HTMLElement {
 		const attacksHtmlPanel = `
       <div class="panel-card">
         <h3>Notable cryptanalysis</h3>
+        <p class="panel-copy">Dates are the year of the first peer-reviewed publication venue \u2014 not the ePrint/arXiv year and not the year a result was first announced. Where those differ (they often do by one to three years) the entry says so. Implementation-flaw disclosures with no venue are dated by disclosure and labelled.</p>
         <ol class="attack-list">${attacksHtml}</ol>
       </div>
     `;
@@ -1899,7 +1900,7 @@ function renderInfoTabs(): HTMLElement {
 		'Harvest now': `<p>\u201CHarvest now, decrypt later\u201D is the threat driving urgency today. An adversary can record encrypted traffic now and simply wait for a quantum computer to decrypt it years later. Any data that must stay secret beyond the arrival of quantum computing is already at risk.</p><p>This is why migration to ML-KEM and hybrid key exchange is happening before large quantum computers exist \u2014 the clock on long-lived secrets is already running.</p>`,
 		'Why lattices won': `<p>Lattice schemes hit the sweet spot: kilobyte-scale keys, fast operations, strong security reductions, and the rare ability to support KEMs, signatures, and homomorphic encryption from one foundation. NIST made ML-KEM and ML-DSA its primary standards for exactly this balance.</p><p>Code-based and hash-based families serve as conservative, algorithmically diverse backups. Multivariate and isogeny finalists were broken outright in 2022, underscoring why diversity matters.</p>`,
 		Hybrids: `<p>During migration, the safe move is to combine a classical algorithm with a post-quantum one so the result stays secure as long as either component holds. TLS deployments pairing X25519 with ML-KEM-768 are already widespread.</p><p>This hedges against two risks at once: an undiscovered flaw in a young PQC scheme, and the eventual arrival of quantum computers that break the classical half.</p>`,
-		'NIST categories': `<p>NIST PQC parameter sets are pinned to one of five <em>security categories</em>, each defined by the classical and quantum effort needed to break a specific symmetric benchmark. The table is the headline summary; the underlying definitions are in NISTIR 8413 \u00A74.A.5.</p>${categoriesTable}<p style="margin-top:12px">Grover\u2019s quadratic speedup is folded into the quantum-effort column via a circuit-depth-bounded gate cost model \u2014 Grover with a constrained depth budget does not reach the na\u00EFve 2^(n/2) on AES-256, which is why Cat 5 remains at 2^200 quantum instead of 2^128.</p>`,
+		'NIST categories': `<p>NIST PQC parameter sets are pinned to one of five <em>security categories</em>, each defined by the effort needed to break a specific symmetric benchmark. The definitions are in NIST\u2019s PQC Call for Proposals, \u00A74.A.5, and they are quoted below in NIST\u2019s own form.</p>${categoriesTable}<p style="margin-top:12px"><strong>Read the two columns as alternatives, not as a pair.</strong> NIST states each AES-pegged category as \u201C2^x/MAXDEPTH quantum gates <em>or</em> 2^y classical gates\u201D. MAXDEPTH is a free parameter bounding how long a serial quantum computation is plausible; NIST suggests anywhere from 2^40 (a year of currently envisioned quantum hardware) to 2^96 (an upper bound). That depth bound is why Grover does not reach the na\u00EFve 2^(n/2) here \u2014 a depth-limited Grover must be run in parallel, and parallelism buys only a square-root-of-the-parallelism saving.</p><p style="margin-top:12px">This is also where a common mix-up comes from: at MAXDEPTH = 2^96 the quantum thresholds reduce to roughly 2^74, 2^137 and 2^202, and those quotients often get printed next to the raw classical gate counts as if the two were the same metric. They are not. Always say which MAXDEPTH you assumed.</p>`,
 	};
 
 	const keys = Object.keys(panels);

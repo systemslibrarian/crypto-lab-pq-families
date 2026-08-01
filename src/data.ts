@@ -4,9 +4,11 @@
 
 export type Maturity = 'standardized' | 'selected' | 'research' | 'broken';
 
-// NIST PQC security categories (NISTIR 8413). Category 1 ≈ AES-128 brute-force
-// effort, 3 ≈ AES-192, 5 ≈ AES-256; 2 / 4 are pegged to SHA-256 / SHA-384
-// collision search. Categories cover both classical and quantum effort.
+// NIST PQC security categories (NIST PQC Call for Proposals, §4.A.5).
+// Category 1 ≈ AES-128 exhaustive key search, 3 ≈ AES-192, 5 ≈ AES-256;
+// 2 / 4 are pegged to SHA-256 / SHA-384 collision search. The AES-pegged
+// categories state a classical gate count OR a MAXDEPTH-normalised quantum
+// gate count — see SECURITY_CATEGORIES below for the exact wording.
 export type SecurityCategory = 1 | 2 | 3 | 5;
 
 export interface Scheme {
@@ -26,8 +28,16 @@ export interface Scheme {
 }
 
 export interface Attack {
+	/**
+	 * Citation convention for every entry below: `year` is the year of the first
+	 * peer-reviewed publication venue \u2014 not the ePrint/arXiv year, and not the
+	 * year the result was first announced. Where those differ, `summary` says so.
+	 * Implementation-flaw disclosures with no venue carry the disclosure year and
+	 * label it as such in `venue`.
+	 */
 	year: number;
 	name: string;
+	venue?: string;
 	summary: string;
 }
 
@@ -132,13 +142,15 @@ export const FAMILIES: Family[] = [
 				summary: 'Polynomial-time reduction yielding short-ish lattice vectors. Foundation under every modern lattice attack.',
 			},
 			{
-				year: 1995,
+				year: 1991,
 				name: 'BKZ block-Korkine–Zolotarev (Schnorr–Euchner)',
-				summary: 'Block-wise refinement of LLL; with sieving improvements (Chen–Nguyen, Becker–Ducas–Gama–Laarhoven) this is the cost model used to set parameters.',
+				venue: 'FCT 1991',
+				summary: 'Block-wise refinement of LLL; with sieving improvements (Chen–Nguyen, Becker–Ducas–Gama–Laarhoven) this is the cost model used to set parameters. First published at FCT 1991; the expanded journal version is Mathematical Programming 66 (1994), which is why the algorithm is often cited as 1994.',
 			},
 			{
 				year: 2023,
 				name: 'KyberSlash',
+				venue: 'Coordinated disclosure, 2023 (no peer-reviewed venue)',
 				summary: 'Constant-time bug in Kyber’s ciphertext compression leaked secret bits through cycle counts. Patched in all major implementations within months of disclosure.',
 			},
 			{
@@ -583,24 +595,28 @@ export const FAMILIES: Family[] = [
 			'Best known classical algorithms for the *plain* supersingular isogeny problem are sub-exponential (Delfs\u2013Galbraith / van Oorschot\u2013Wiener style meet-in-the-middle). Quantum attacks (Childs\u2013Jao\u2013Soukharev for class-group action variants; Kuperberg\u2019s collimation algorithm for CSIDH) are also sub-exponential \u2014 much slower than Shor on RSA but not polynomial.',
 		attacks: [
 			{
-				year: 2014,
+				year: 2016,
 				name: 'Delfs\u2013Galbraith claw-finding',
-				summary: 'Meet-in-the-middle on the isogeny graph \u2014 the dominant classical attack on the plain supersingular isogeny problem.',
+				venue: 'Designs, Codes and Cryptography 78 (2016)',
+				summary: 'Meet-in-the-middle on the isogeny graph \u2014 the dominant classical attack on the plain supersingular isogeny problem. Circulated as ePrint 2013/506 and often cited by that year; the peer-reviewed version is the 2016 journal article.',
 			},
 			{
-				year: 2018,
-				name: 'Petit / GPST adaptive attacks on SIDH',
-				summary: 'Early structural attacks against SIDH-with-torsion that hinted the auxiliary points were dangerous.',
+				year: 2016,
+				name: 'GPST adaptive attack on SIDH (Galbraith\u2013Petit\u2013Shani\u2013Ti)',
+				venue: 'Asiacrypt 2016',
+				summary: 'Adaptive attack recovering a static SIDH key from malformed torsion points \u2014 the first strong hint that the auxiliary points were dangerous. Petit\u2019s torsion-point attacks on unbalanced SIDH parameters followed at Asiacrypt 2017.',
 			},
 			{
-				year: 2022,
+				year: 2023,
 				name: 'Castryck\u2013Decru key recovery on SIDH/SIKE',
-				summary: 'Polynomial-time classical attack via Kani\u2019s theorem; ran in \u2248 1 hour on a single core. Generalised by Maino\u2013Martindale and Robert within weeks.',
+				venue: 'Eurocrypt 2023',
+				summary: 'Polynomial-time classical attack via Kani\u2019s theorem; ran in \u2248 1 hour on a single core. Generalised by Maino\u2013Martindale and Robert within weeks. Disclosed on ePrint in July 2022 \u2014 which is when SIKE actually died \u2014 and published at Eurocrypt 2023; this list is ordered by publication venue, the events timeline by when they happened.',
 			},
 			{
-				year: 2014,
+				year: 2013,
 				name: 'Kuperberg collimation against class-group actions',
-				summary: 'Sub-exponential quantum attack model that drives CSIDH parameter sizes well above the original proposal.',
+				venue: 'TQC 2013',
+				summary: 'Sub-exponential quantum attack model that drives CSIDH parameter sizes well above the original proposal. Posted to arXiv in 2011 and published at TQC 2013.',
 			},
 		],
 		references: [
@@ -618,7 +634,7 @@ export const FAMILIES: Family[] = [
 			},
 			{
 				authors: 'Castryck, Decru',
-				year: 2022,
+				year: 2023,
 				title: 'An efficient key recovery attack on SIDH',
 				venue: 'Eurocrypt 2023',
 			},
@@ -747,7 +763,16 @@ export const CLASSICAL_BASELINE: ClassicalBaseline = {
 // added alongside the PQC scheme. This is the recipe used in current TLS hybrid drafts.
 export const HYBRID_OVERHEAD: ClassicalBaseline = CLASSICAL_BASELINE;
 
-// --- NIST PQC security categories (NISTIR 8413, table 3) -------------------
+// --- NIST PQC security categories ------------------------------------------
+// Source of the effort floors: NIST's PQC Call for Proposals, §4.A.5. The
+// categories pegged to AES key search are stated there as a pair of thresholds
+// in one metric each — e.g. Category 1 is "2^170/MAXDEPTH quantum gates or
+// 2^143 classical gates". MAXDEPTH is a free parameter (NIST gives 2^40 up to
+// 2^96) bounding how long a serial quantum computation is plausible, so the
+// quantum figure is NOT a bare gate count. Dividing by the largest plausible
+// MAXDEPTH = 2^96 is what produces the 2^74 / 2^137 / 2^202 numbers that
+// circulate; an earlier revision of this file printed those quotients unlabelled
+// beside the raw classical gate counts, mixing two metrics in one cell.
 export interface SecurityCategoryDescriptor {
 	level: SecurityCategory;
 	floor: string; // classical effort floor
@@ -758,25 +783,25 @@ export interface SecurityCategoryDescriptor {
 export const SECURITY_CATEGORIES: SecurityCategoryDescriptor[] = [
 	{
 		level: 1,
-		floor: '≥ 2^143 classical, ≥ 2^74 quantum (gate cost model)',
+		floor: '≥ 2^143 classical gates, or ≥ 2^170/MAXDEPTH quantum gates',
 		example: 'Exhaustive key search of AES-128',
 		note: 'Minimum acceptable category — used by Falcon-512, McEliece-348864, HQC-128, SLH-DSA-128f.',
 	},
 	{
 		level: 2,
-		floor: '≥ 2^146 classical for SHA-256 collision',
+		floor: '≥ 2^146 classical gates (collision search; no quantum threshold given)',
 		example: 'Collision search on SHA-256',
 		note: 'Rarely targeted directly; sits between Cat 1 and Cat 3 in cost.',
 	},
 	{
 		level: 3,
-		floor: '≥ 2^207 classical, ≥ 2^137 quantum',
+		floor: '≥ 2^207 classical gates, or ≥ 2^233/MAXDEPTH quantum gates',
 		example: 'Exhaustive key search of AES-192',
 		note: 'NIST primaries (ML-KEM-768, ML-DSA-65) target this level — the production sweet spot.',
 	},
 	{
 		level: 5,
-		floor: '≥ 2^272 classical, ≥ 2^200 quantum',
+		floor: '≥ 2^272 classical gates, or ≥ 2^298/MAXDEPTH quantum gates',
 		example: 'Exhaustive key search of AES-256',
 		note: 'Conservative top-tier parameters (ML-KEM-1024, ML-DSA-87, SLH-DSA-256s).',
 	},

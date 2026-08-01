@@ -943,6 +943,12 @@
   font-size: 0.94rem;
 }
 
+.attack-venue {
+  font-weight: 500;
+  color: var(--ink-soft, inherit);
+  opacity: 0.85;
+}
+
 .attack-summary {
   margin-top: 4px;
 }
