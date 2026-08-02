@@ -600,6 +600,12 @@
   outline-offset: 2px;
 }
 
+.hs-preset.is-active {
+  background: var(--mono-block-bg);
+  color: var(--mono-block-fg);
+  border-color: var(--mono-block-bg);
+}
+
 .hs-preset.is-warn {
   color: var(--accent-2);
   border-style: dashed;
@@ -2138,6 +2144,113 @@ html[data-audience='executive'] .lab-section[data-audience~='executive']::before
 .lc--bit1.lc--revealed {
   background: var(--accent-2);
   border-color: var(--accent-2);
+}
+
+/* A position where BOTH private halves have leaked. Not colour-only: the ring
+   plus the text summary under the grid carry the same fact. */
+.lc--both.lc--revealed {
+  background: var(--accent-3);
+  border-color: var(--ink-strong);
+  outline: 2px solid var(--ink-strong);
+  outline-offset: -1px;
+}
+
+.lamport-grid-summary {
+  margin: 8px 0 0;
+  font-size: 0.86rem;
+  color: var(--ink-soft);
+}
+
+.lamport-sub-h {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+}
+
+.lamport-sub-copy {
+  margin: 0 0 12px;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+
+.lamport-reuse,
+.lamport-forge {
+  margin-top: 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--panel);
+}
+
+.lamport-reuse .lamport-controls,
+.lamport-forge .lamport-controls {
+  margin-top: 0;
+}
+
+.lat-trace {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--input-bg);
+}
+
+.lat-steps {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+}
+
+.lat-step {
+  font-size: 0.83rem;
+  line-height: 1.5;
+  font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  color: var(--ink);
+}
+
+.lat-trace-empty {
+  margin: 8px 0 0;
+  font-size: 0.83rem;
+  line-height: 1.55;
+  color: var(--ink-soft);
+}
+
+.hs-broken {
+  margin-top: 16px;
+  padding: 16px 18px;
+  border: 1px solid var(--warning-border);
+  border-radius: 14px;
+  background: var(--warning-bg);
+  color: var(--warning-fg);
+}
+
+.hs-broken-head {
+  margin: 0 0 12px;
+  font-weight: 700;
+}
+
+.hs-broken-item + .hs-broken-item {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--warning-border);
+}
+
+.hs-broken-title,
+.hs-broken-note,
+.hs-broken-attack,
+.hs-broken-link {
+  margin: 0 0 6px;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.hs-broken-link {
+  margin-bottom: 0;
+}
+
+.hs-broken-cta {
+  font-weight: 700;
+  color: inherit;
 }
 
 .lamport-warn {

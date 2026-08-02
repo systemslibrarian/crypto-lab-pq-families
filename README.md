@@ -52,12 +52,13 @@ npm run dev
 
 ## For Cryptographers and Students
 
-The lab includes four live, in-browser learning tools — every byte computed locally, no servers, no telemetry:
+The lab includes five live, in-browser learning tools — every byte computed locally, no servers, no telemetry:
 
 - **Live Lamport one-time signature demo** — Generate a real 16 KB Lamport keypair using the browser's `crypto.subtle.digest('SHA-256', …)`. Sign any message you type, watch the 256-cell digest grid colour in by which key-half each bit reveals, then click **Tamper & verify** to see the verification fail. This is real working cryptography (1979 Lamport, the construction underneath SLH-DSA / SPHINCS+'s leaves). Open DevTools — the bytes are real.
-- **2D lattice visualizer** — drag the basis vectors b₁ and b₂; the demo redraws every integer-combination lattice point, the fundamental parallelogram, and the shortest non-zero lattice vector in real time. One click runs a Lagrange–Gauss reduction step. Numerical readout includes ‖b₁‖·‖b₂‖, det L, and the orthogonality defect — so "what changes between a good and a bad basis" is something you can *feel*.
+- **Key reuse, mounted rather than described** — **Sign a second message** with the same keypair and the page counts, from the two digests it just computed, exactly how many of the 256 positions now leak *both* private halves (the outlined cells), how many remain one-sided, and what that does to the forgery grind — typically from 2²⁵⁶ down to about 2¹²⁸. That is still far out of reach of a browser tab, so a second panel runs the *same* `lamportKeygen` / `lamportSign` / `lamportVerify` functions over a **deliberately truncated 12 / 16 / 20-bit digest**, where the grind finishes in a few hundred hashes: two signatures are published, the leaked halves are assembled, candidate messages are hashed until one is covered, and the forged signature is handed to the real verifier, which accepts it. The scale is a toy and is labelled as one on the page; nothing about the attack is simulated. A control step then takes a message the leak does *not* cover, fills the missing positions with the only halves the attacker holds, and the same verifier rejects it.
+- **2D lattice visualizer** — drag the basis vectors b₁ and b₂; the demo redraws every integer-combination lattice point, the fundamental parallelogram, and the shortest non-zero lattice vector in real time. Lagrange–Gauss reduction runs **as a visible sequence**: step once, or run to the fixed point, and every iteration prints what it actually did — whether it swapped b₁ and b₂, the integer μ = ⌊⟨b₁,b₂⟩/⟨b₁,b₁⟩⌉ it rounded to, the norm b₂ fell to, and the resulting orthogonality defect — until μ comes out 0. A *Parallel (not a lattice)* preset shows the honest failure: a rank-1 pair reduces to the zero vector, and the trace says the input spans a line instead of presenting (0, 0) as a shortest vector. Numerical readout includes ‖b₁‖·‖b₂‖, det L, and the orthogonality defect — so "what changes between a good and a bad basis" is something you can *feel*.
 - **Prange ISD work calculator** — sliders for code parameters (n, k, t) with live log₂-bits computation using the C(n, t) / C(n−k, t) ratio. Preset buttons for the three Classic McEliece parameter sets (348864, 460896, 6688128) show where *raw* Prange lands relative to the NIST Cat 1 / 3 / 5 floors. Textbook Prange (1962) is the weakest ISD, so for the default set it sits right at the Cat-1 floor (~143 bits) and for the higher sets slightly below their nominal floors; the parameter sets carry their real margin against the *best-known* ISD variants, which this simple ratio does not model. It is an order-of-magnitude teaching tool, not the standardisation analysis.
-- **Handshake bytes calculator** — already covered above, but now with a **0 / 1 / 2 intermediate cert** toggle so the compounding cost of long PQC certificate chains is visible (each ML-DSA intermediate adds ~5 KB).
+- **Handshake bytes calculator** — already covered above, but now with a **0 / 1 / 2 intermediate cert** toggle so the compounding cost of long PQC certificate chains is visible (each ML-DSA intermediate adds ~5 KB). Selecting a dead scheme — the **Broken combo** preset picks SIKEp434 and Rainbow (Ia) — opens a hand-off panel naming the cryptanalysis that ended it, quoted from this repo's own attack list, and links through to the sibling lab that actually runs the mathematics: [crypto-lab-isogeny-gate](https://systemslibrarian.github.io/crypto-lab-isogeny-gate/) for Castryck–Decru, [crypto-lab-multivariate](https://systemslibrarian.github.io/crypto-lab-multivariate/) for Beullens on Rainbow. This page can price a broken scheme's bytes; it cannot break it, and says so.
 
 Every family panel additionally includes:
 
@@ -70,6 +71,21 @@ Every family panel additionally includes:
 ## Tech
 
 Vite + TypeScript, zero runtime dependencies. The comparison corpus, history timeline, and classical baseline live in a single typed module (`src/data.ts`); the UI is plain DOM in `src/ui.ts`. Dark mode by default with a persisted theme toggle, log-scale charts with a metric switch, an interactive handshake-bytes visualiser, URL deep-linking, and number-key shortcuts. WAI-ARIA tablists with keyboard navigation throughout.
+
+All of the mathematics — Lamport keygen/sign/verify, the leak and forgery machinery, the Prange
+ratio, and Lagrange–Gauss reduction — lives in `src/crypto.ts` as pure functions, so the unit tests
+and the page run the identical code. Gates:
+
+```
+npm run test      # vitest: SHA-256 KATs, Lamport round-trips and forgeries, ISD, reduction traces
+npm run build     # tsc --noEmit + vite build
+npm run test:a11y # playwright: e2e/a11y.spec.ts (axe, both themes) + e2e/demo.spec.ts (behaviour)
+```
+
+`e2e/demo.spec.ts` asserts the computed outcome of each exhibit *and* its failure path: the tampered
+message is rejected, the leaked-both count equals the differing-bit count, the toy forgery is accepted
+by the real verifier while the uncovered control is refused, each McEliece preset lands in the category
+its binomial ratio implies, and the parallel basis is reported as not a lattice.
 
 ---
 

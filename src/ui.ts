@@ -15,18 +15,28 @@ import {
 	type TimelineKind,
 } from './data.ts';
 import {
+	absorbSignature,
 	bitAt,
 	determinant as latDeterminant,
-	lagrangeGaussStep as latReduceStep,
+	differingBits,
+	digestCoveredBy,
+	digestMessage,
+	emptyLeak,
+	forgeFromLeak,
+	forgeWorkBits,
+	lagrangeGaussStepDetailed,
+	lagrangeGaussTrace,
 	lamportKeygen,
 	lamportSign,
 	lamportVerify,
+	leakStats,
 	log2Binom,
 	norm as vecNorm,
 	orthogonalityDefect,
 	shortestVector as latShortestVector,
 	type LamportKeypair,
 	type LamportSignature,
+	type LeakedKey,
 	type Vec2,
 } from './crypto.ts';
 
@@ -555,6 +565,31 @@ const SIG_SCHEMES = FAMILIES.flatMap((f) =>
 	f.schemes.filter((s) => s.kind === 'Signature').map((s) => ({ family: f, scheme: s })),
 );
 
+// Where the break is actually demonstrated. This page can price a dead scheme's
+// bytes, but it cannot run the cryptanalysis that killed it: a Rainbow key
+// recovery or a Castryck–Decru run is not a browser-tab computation at real
+// parameters. So a broken selection hands off to the sibling lab that does run
+// the mathematics, instead of stopping at a warning banner. `attackName` is
+// matched against the family's own attack list so the citation shown is the one
+// this repo already carries, not a second copy that can drift from it.
+const BREAK_LABS: Record<
+	string,
+	{ href: string; label: string; attackName: string; what: string }
+> = {
+	multivariate: {
+		href: 'https://systemslibrarian.github.io/crypto-lab-multivariate/',
+		label: 'crypto-lab-multivariate',
+		attackName: 'Beullens: Rainbow key recovery',
+		what: 'runs a real Unbalanced Oil-and-Vinegar signature over GF(256) in the browser — keygen, trapdoor inversion, verification — then walks the Beullens lineage that ended Rainbow: the intersection and rectangular MinRank attacks of Eurocrypt 2021, then the simple attack of Crypto 2022.',
+	},
+	isogeny: {
+		href: 'https://systemslibrarian.github.io/crypto-lab-isogeny-gate/',
+		label: 'crypto-lab-isogeny-gate',
+		attackName: 'Castryck–Decru key recovery on SIDH/SIKE',
+		what: 'runs a genuine commutative isogeny key exchange over GF(419) with exact BigInt arithmetic, and shows why the torsion-point images SIDH published are precisely what Castryck–Decru converted into a one-hour key recovery.',
+	},
+};
+
 // Bytes-on-wire for the classical TLS 1.3 baseline:
 //   client_key_share (kemPub) + server_key_share (kemOut)
 // + server leaf cert pubkey + leaf cert signature
@@ -634,6 +669,7 @@ function renderHandshakeCalculator(): HTMLElement {
     </div>
 
     <p class="hs-note" id="hs-note"></p>
+    <div class="hs-broken" id="hs-broken" role="region" aria-label="How the selected broken scheme fell" hidden></div>
   `;
 
 	const state: HsState = {
@@ -706,16 +742,53 @@ function renderHandshakeCalculator(): HTMLElement {
 		).join('');
 	}
 
-	function findKem(name: string): Scheme {
-		return KEM_SCHEMES.find((s) => s.scheme.name === name)!.scheme;
+	function findKem(name: string): { family: Family; scheme: Scheme } {
+		return KEM_SCHEMES.find((s) => s.scheme.name === name)!;
 	}
-	function findSig(name: string): Scheme {
-		return SIG_SCHEMES.find((s) => s.scheme.name === name)!.scheme;
+	function findSig(name: string): { family: Family; scheme: Scheme } {
+		return SIG_SCHEMES.find((s) => s.scheme.name === name)!;
+	}
+
+	// Renders the "what actually broke this" hand-off. Empty (and hidden) unless
+	// the current selection contains a broken scheme.
+	function paintBrokenPanel(picks: { role: string; family: Family; scheme: Scheme }[]): void {
+		const host = section.querySelector('#hs-broken') as HTMLElement;
+		const dead = picks.filter((p) => p.scheme.maturity === 'broken');
+		if (dead.length === 0) {
+			host.hidden = true;
+			host.innerHTML = '';
+			return;
+		}
+		host.hidden = false;
+		host.innerHTML =
+			`<p class="hs-broken-head">These bytes are from a scheme that no longer exists as a security claim.</p>` +
+			dead
+				.map((p) => {
+					const lab = BREAK_LABS[p.family.id];
+					const attack = lab ? p.family.attacks.find((a) => a.name === lab.attackName) : undefined;
+					const cite = attack
+						? `<p class="hs-broken-attack"><strong>${attack.name}</strong>${attack.venue ? ` · ${attack.venue}` : ` · ${attack.year}`} — ${attack.summary}</p>`
+						: '';
+					const link = lab
+						? `<p class="hs-broken-link">This calculator cannot run that attack. <a class="hs-broken-cta" href="${lab.href}" target="_blank" rel="noopener noreferrer" data-break-lab="${p.family.id}">Open ${lab.label}</a>, which ${lab.what}</p>`
+						: '';
+					return (
+						`<div class="hs-broken-item">` +
+						`<p class="hs-broken-title">${p.role}: <strong>${p.scheme.name}</strong> — ${p.family.name}, broken ${p.scheme.brokenYear ?? ''}</p>` +
+						`<p class="hs-broken-note">${p.scheme.note}</p>` +
+						cite +
+						link +
+						`</div>`
+					);
+				})
+				.join('');
 	}
 
 	function paint(): void {
-		const kem = findKem(state.kemName);
-		const sig = findSig(state.sigName);
+		const kemPick = findKem(state.kemName);
+		const sigPick = findSig(state.sigName);
+		const kem = kemPick.scheme;
+		const sig = sigPick.scheme;
 
 		const segments = [
 			{ cls: 'kempk', label: 'KEM pk', bytes: kem.pubKey },
@@ -801,6 +874,11 @@ function renderHandshakeCalculator(): HTMLElement {
 				? `<strong class="hs-note-warn">\u26a0 One of these schemes is broken \u2014 shown for comparison only.</strong> `
 				: '';
 		noteHost.innerHTML = `${brokenWarn}This handshake spends <strong>${formatBytes(pqcTotal)}</strong> on key exchange and authentication \u2014 about <strong>${ratioText}\u00d7</strong> the classical baseline (<strong>${formatBytes(classical)}</strong>).${state.hybrid ? ' Hybrid adds the classical hedge so the connection stays secure as long as either component holds.' : ''}`;
+
+		paintBrokenPanel([
+			{ role: 'KEM', family: kemPick.family, scheme: kem },
+			{ role: 'Signature', family: sigPick.family, scheme: sig },
+		]);
 	}
 
 	renderPresets();
@@ -1017,9 +1095,16 @@ function renderLatticeViz(): HTMLElement {
         <div class="lat-verdict" id="lat-verdict"></div>
         <div class="lat-actions">
           <button type="button" class="hs-preset" data-lat-preset="orthogonal">Orthogonal basis</button>
-          <button type="button" class="hs-preset" data-lat-preset="bad">Bad (long, near-parallel) basis</button>
+          <button type="button" class="hs-preset" data-lat-preset="bad">Bad (long, skewed) basis</button>
           <button type="button" class="hs-preset" data-lat-preset="hex">Hexagonal lattice</button>
-          <button type="button" class="hs-preset" data-lat-preset="reduce">Reduce (Lagrange–Gauss)</button>
+          <button type="button" class="hs-preset" data-lat-preset="degenerate">Parallel (not a lattice)</button>
+          <button type="button" class="hs-preset" data-lat-preset="step">Lagrange–Gauss: one step</button>
+          <button type="button" class="hs-preset" data-lat-preset="reduce-all">Run to fixed point</button>
+        </div>
+        <div class="lat-trace">
+          <p class="hero-metric-label" id="lat-trace-title">Reduction trace</p>
+          <ol class="lat-steps" id="lat-steps" aria-labelledby="lat-trace-title"></ol>
+          <p class="lat-trace-empty" id="lat-trace-empty">No steps yet. Each step does exactly two things: order the pair so ‖b₁‖ ≤ ‖b₂‖, then subtract μ = ⌊⟨b₁,b₂⟩/⟨b₁,b₁⟩⌉ copies of b₁ from b₂. The reduction stops the first time μ comes out 0 — that is the fixed point, and in two dimensions b₁ is then provably a shortest vector.</p>
         </div>
         <p class="lat-note">A <em>good</em> basis is short and nearly orthogonal — defect close to 1. Lattice-based cryptography hides the good basis (secret key) behind a bad one (public key). Recovering the good basis from the bad one is the lattice problem.</p>
       </div>
@@ -1046,11 +1131,61 @@ function renderLatticeViz(): HTMLElement {
 		latShortestVector(b1, b2);
 	const determinant = (): number => latDeterminant(b1, b2);
 
-	// One step of Lagrange–Gauss reduction in 2D.
-	function lagrangeGaussStep(): void {
-		const r = latReduceStep(b1, b2);
-		b1 = r.b1;
-		b2 = r.b2;
+	// Reduction is shown as a sequence, not a result. Each entry below is the
+	// swap flag and the μ that lagrangeGaussStepDetailed actually computed for
+	// that iteration — the intermediate states are the lesson, so they are
+	// printed rather than collapsed into a single "reduced" jump.
+	let stepNo = 0;
+
+	function describeStep(s: ReturnType<typeof lagrangeGaussStepDetailed>): string {
+		stepNo++;
+		const order = s.swapped ? 'swap b₁ ↔ b₂ (‖b₂‖ was shorter)' : 'already ordered, ‖b₁‖ ≤ ‖b₂‖';
+		if (s.degenerate) {
+			return `<strong>Step ${stepNo}</strong> · ${order} · the shorter vector is now <strong>(0, 0)</strong> — the two starting vectors were parallel, so they span a line, not a 2D lattice. Reduction halts: there is no shortest non-zero vector to find.`;
+		}
+		if (s.done) {
+			return `<strong>Step ${stepNo}</strong> · ${order} · μ = 0 → nothing left to subtract. <strong>Fixed point:</strong> the basis is Lagrange-reduced and b₁ is a shortest non-zero vector.`;
+		}
+		const n1 = vecNorm(s.after.b1);
+		const n2 = vecNorm(s.after.b2);
+		return (
+			`<strong>Step ${stepNo}</strong> · ${order} · μ = ${s.mu} · b₂ ← b₂ − ${s.mu}·b₁ ` +
+			`· ‖b₂‖ ${vecNorm(s.before.b2).toFixed(3)} → ${n2.toFixed(3)} ` +
+			`· ‖b₁‖ ${n1.toFixed(3)} · defect ${orthogonalityDefect(s.after.b1, s.after.b2).toFixed(3)}`
+		);
+	}
+
+	function logStep(html: string): void {
+		const host = section.querySelector('#lat-steps') as HTMLElement;
+		const empty = section.querySelector('#lat-trace-empty') as HTMLElement;
+		const li = document.createElement('li');
+		li.className = 'lat-step';
+		li.innerHTML = html;
+		host.appendChild(li);
+		empty.hidden = true;
+	}
+
+	function clearTrace(): void {
+		stepNo = 0;
+		(section.querySelector('#lat-steps') as HTMLElement).innerHTML = '';
+		(section.querySelector('#lat-trace-empty') as HTMLElement).hidden = false;
+	}
+
+	function reduceOneStep(): void {
+		const s = lagrangeGaussStepDetailed(b1, b2);
+		logStep(describeStep(s));
+		b1 = s.after.b1;
+		b2 = s.after.b2;
+	}
+
+	function reduceFully(): void {
+		const steps = lagrangeGaussTrace(b1, b2);
+		for (const s of steps) logStep(describeStep(s));
+		const last = steps[steps.length - 1];
+		if (last) {
+			b1 = last.after.b1;
+			b2 = last.after.b2;
+		}
 	}
 
 	function format(v: { x: number; y: number }): string {
@@ -1170,6 +1305,9 @@ function renderLatticeViz(): HTMLElement {
 
 	function startDrag(which: 'b1' | 'b2', e: PointerEvent): void {
 		e.preventDefault();
+		// Moving a basis vector by hand invalidates the printed trace — those
+		// steps described a basis that no longer exists.
+		clearTrace();
 		const handle = e.currentTarget as Element;
 		handle.setPointerCapture(e.pointerId);
 		const move = (ev: PointerEvent) => {
@@ -1208,6 +1346,7 @@ function renderLatticeViz(): HTMLElement {
 		else if (e.key === 'ArrowDown') dy = -step;
 		else return;
 		e.preventDefault();
+		clearTrace();
 		const v = which === 'b1' ? b1 : b2;
 		const next = {
 			x: Math.max(-RANGE, Math.min(RANGE, v.x + dx)),
@@ -1231,17 +1370,32 @@ function renderLatticeViz(): HTMLElement {
 			case 'orthogonal':
 				b1 = { x: 3, y: 0 };
 				b2 = { x: 0, y: 2 };
+				clearTrace();
 				break;
+			// A genuinely bad basis: long, skewed, defect ≈ 41 — but full rank.
+			// The old values here (5,2) / (6,2.4) had determinant exactly 0, so
+			// they spanned a line rather than a lattice, which is a different
+			// (and separately shown) failure than "bad basis".
 			case 'bad':
 				b1 = { x: 5, y: 2 };
+				b2 = { x: 7, y: 3 };
+				clearTrace();
+				break;
+			case 'degenerate':
+				b1 = { x: 5, y: 2 };
 				b2 = { x: 6, y: 2.4 };
+				clearTrace();
 				break;
 			case 'hex':
 				b1 = { x: 2, y: 0 };
 				b2 = { x: 1, y: Math.sqrt(3) };
+				clearTrace();
 				break;
-			case 'reduce':
-				lagrangeGaussStep();
+			case 'step':
+				reduceOneStep();
+				break;
+			case 'reduce-all':
+				reduceFully();
 				break;
 		}
 		repaint();
@@ -1550,13 +1704,73 @@ function renderLamportDemo(): HTMLElement {
 
     <p class="section-kicker" style="margin-top:18px">Per-bit reveal pattern (256 bits of SHA-256 digest)</p>
     <div class="lamport-grid" id="lamport-grid" role="img" aria-label="Per-bit reveal grid"></div>
+    <p class="lamport-grid-summary" id="lamport-grid-summary" role="status" aria-live="polite">No signature yet — nothing revealed.</p>
+
+    <div class="lamport-reuse" id="lamport-reuse">
+      <h3 class="lamport-sub-h">Break the "one-time" rule</h3>
+      <p class="lamport-sub-copy">
+        Sign a <em>second</em> message with the same keypair. At every bit position where the two
+        digests differ, the signer hands over both private halves — and from then on an attacker can
+        answer either bit at that position. The counts below are read off the two digests this page
+        just computed, not asserted.
+      </p>
+      <div class="lamport-controls">
+        <label class="lamport-msg-wrap">
+          <span class="hero-metric-label">Second message</span>
+          <input type="text" id="lamport-msg2" value="Pay Mallory 1000000" maxlength="200" />
+        </label>
+        <button type="button" id="lamport-sign2" class="lamport-btn lamport-btn--warn" disabled>Sign a second message</button>
+      </div>
+      <div class="lamport-stats">
+        <div class="rec-line"><span class="rec-line-label">Digest #2</span><span class="rec-line-value mono-inline" id="lamport-digest2">—</span></div>
+        <div class="rec-line"><span class="rec-line-label">Positions leaking BOTH halves</span><span class="rec-line-value mono-inline" id="lamport-leak-both">—</span></div>
+        <div class="rec-line"><span class="rec-line-label">Positions still one-sided</span><span class="rec-line-value mono-inline" id="lamport-leak-one">—</span></div>
+        <div class="rec-line"><span class="rec-line-label">Forgery grind after this leak</span><span class="rec-line-value mono-inline" id="lamport-forge-work">—</span></div>
+      </div>
+      <p class="lamport-sub-copy" id="lamport-leak-note">
+        The grid recolours after the second signature: outlined cells are the positions where the
+        attacker now holds both preimages.
+      </p>
+    </div>
+
+    <div class="lamport-forge" id="lamport-forge">
+      <h3 class="lamport-sub-h">Now actually forge one — at a toy width</h3>
+      <p class="lamport-sub-copy">
+        At the full 256-bit width the grind above is out of reach, so the forgery below runs the
+        <strong>same</strong> <code>lamportKeygen / lamportSign / lamportVerify</code> functions over a
+        deliberately truncated digest — the first <span class="mono-inline" id="forge-width-label">12</span>
+        bits of SHA-256 instead of all 256 (that is a <span class="mono-inline" id="forge-width-note">12</span>-bit
+        instance — smaller than a lottery ticket). <strong>This is a toy scale, stated plainly:</strong> a real
+        Lamport instance is never this narrow. Everything else is unchanged, and the acceptance verdict
+        comes from the real verifier, not from the attack code.
+      </p>
+      <div class="lamport-controls" role="group" aria-label="Toy digest width">
+        <span class="hs-preset-label">Digest width:</span>
+        <button type="button" class="hs-preset is-active" data-forge-bits="12" aria-pressed="true">12 bits</button>
+        <button type="button" class="hs-preset" data-forge-bits="16" aria-pressed="false">16 bits</button>
+        <button type="button" class="hs-preset" data-forge-bits="20" aria-pressed="false">20 bits</button>
+        <button type="button" id="lamport-forge-run" class="lamport-btn lamport-btn--primary">Run the key-reuse forgery</button>
+      </div>
+      <div class="lamport-stats">
+        <div class="rec-line"><span class="rec-line-label">1 · Keypair</span><span class="rec-line-value mono-inline" id="forge-keygen">—</span></div>
+        <div class="rec-line"><span class="rec-line-label">2 · Two signatures observed</span><span class="rec-line-value mono-inline" id="forge-observed">—</span></div>
+        <div class="rec-line"><span class="rec-line-label">3 · Attacker's key material</span><span class="rec-line-value mono-inline" id="forge-leak">—</span></div>
+        <div class="rec-line"><span class="rec-line-label">4 · Search for a covered message</span><span class="rec-line-value mono-inline" id="forge-search">—</span></div>
+        <div class="rec-line"><span class="rec-line-label">5 · Real verifier on the forgery</span><span class="rec-line-value" id="forge-verdict">—</span></div>
+        <div class="rec-line"><span class="rec-line-label">6 · Control: an uncovered message</span><span class="rec-line-value" id="forge-control">—</span></div>
+      </div>
+      <p class="lamport-sub-copy" id="forge-note">
+        Step 6 is the check that keeps step 5 honest: the attacker picks a message the leak does
+        <em>not</em> cover, fills the missing positions with the only halves they hold, and the same
+        verifier rejects it.
+      </p>
+    </div>
 
     <p class="lamport-warn">
-      <strong>One-time only.</strong> Signing a second message with this keypair would, at every
-      bit position where the two digests differ, reveal <em>both</em> private halves — enough for
-      anyone to forge a signature on any future message. Stateful XMSS / LMS schedule a fresh leaf
-      per signature; stateless SLH-DSA (SPHINCS+) samples a FORS few-time tree per message inside a
-      WOTS+ hypertree.
+      <strong>One-time only.</strong> Stateful XMSS / LMS schedule a fresh leaf per signature;
+      stateless SLH-DSA (SPHINCS+) samples a FORS few-time tree per message inside a WOTS+
+      hypertree. Every one of those designs exists to make the two-signature leak you just watched
+      impossible to trigger by accident.
     </p>
   `;
 
@@ -1570,15 +1784,23 @@ function renderLamportDemo(): HTMLElement {
 	let kp: LamportKeypair | null = null;
 	let lastSig: LamportSignature | null = null;
 	let lastSigMsg: string | null = null;
+	// Attacker's view of the keypair, accumulated from whatever signatures this
+	// page has published. Reset on every keygen — a fresh keypair leaks nothing.
+	let leak: LeakedKey = emptyLeak(256);
+	let digest1: Uint8Array | null = null;
 
 	const genBtn = section.querySelector('#lamport-gen') as HTMLButtonElement;
 	const signBtn = section.querySelector('#lamport-sign') as HTMLButtonElement;
 	const verifyBtn = section.querySelector('#lamport-verify') as HTMLButtonElement;
 	const tamperBtn = section.querySelector('#lamport-tamper') as HTMLButtonElement;
+	const sign2Btn = section.querySelector('#lamport-sign2') as HTMLButtonElement;
 	const msgIn = section.querySelector('#lamport-msg') as HTMLInputElement;
+	const msg2In = section.querySelector('#lamport-msg2') as HTMLInputElement;
+	const gridSummary = section.querySelector('#lamport-grid-summary') as HTMLElement;
 
 	function paintDigestGrid(digest: Uint8Array | null, sigPresent: boolean, animate = false): void {
 		const cells = grid.querySelectorAll<HTMLElement>('.lc');
+		const stats = leakStats(leak);
 		for (let i = 0; i < 256; i++) {
 			const cell = cells[i];
 			if (!digest) {
@@ -1587,10 +1809,31 @@ function renderLamportDemo(): HTMLElement {
 				continue;
 			}
 			const bit = bitAt(digest, i);
+			const both = leak[i][0] !== null && leak[i][1] !== null;
 			// Staggered reveal: paint cells left-to-right, top-to-bottom over ~600 ms.
 			cell.style.transitionDelay = animate ? `${i * 2}ms` : '';
-			cell.className = `lc lc--bit${bit} ${sigPresent ? 'lc--revealed' : ''}`;
-			cell.title = `bit ${i}: ${bit}${sigPresent ? ' — secret #' + bit + ' revealed' : ''}`;
+			cell.className = `lc lc--bit${bit} ${sigPresent ? 'lc--revealed' : ''} ${both ? 'lc--both' : ''}`;
+			cell.title = both
+				? `bit ${i}: both halves leaked — attacker can sign 0 or 1 here`
+				: `bit ${i}: ${bit}${sigPresent ? ' — secret #' + bit + ' revealed' : ''}`;
+		}
+		const label = !digest
+			? 'No signature yet — nothing revealed.'
+			: stats.both > 0
+				? `${stats.both} of 256 positions leak both private halves (outlined); ${stats.one} still leak only one.`
+				: `${stats.one} of 256 positions have exactly one private half revealed; no position leaks both.`;
+		grid.setAttribute('aria-label', `Per-bit reveal grid. ${label}`);
+		gridSummary.textContent = label;
+	}
+
+	function resetLeakReadouts(): void {
+		for (const id of [
+			'#lamport-digest2',
+			'#lamport-leak-both',
+			'#lamport-leak-one',
+			'#lamport-forge-work',
+		]) {
+			(section.querySelector(id) as HTMLElement).textContent = '—';
 		}
 	}
 
@@ -1602,6 +1845,10 @@ function renderLamportDemo(): HTMLElement {
 		const dt = performance.now() - t0;
 		lastSig = null;
 		lastSigMsg = null;
+		leak = emptyLeak(256);
+		digest1 = null;
+		resetLeakReadouts();
+		sign2Btn.disabled = true;
 		(section.querySelector('#lamport-priv') as HTMLElement).textContent =
 			`16,384 B · pos[0][0] = 0x${shortHex(kp.priv[0][0])} · keygen ${dt.toFixed(0)} ms`;
 		(section.querySelector('#lamport-pub') as HTMLElement).textContent =
@@ -1627,6 +1874,13 @@ function renderLamportDemo(): HTMLElement {
 		const dt = performance.now() - t0;
 		lastSig = sig;
 		lastSigMsg = msg;
+		// Signing again from scratch restarts the attacker's view: this is the
+		// first signature under the current key as far as the leak panel is
+		// concerned, so any prior second-signature leak must be discarded.
+		leak = absorbSignature(emptyLeak(256), digest, sig);
+		digest1 = digest;
+		resetLeakReadouts();
+		sign2Btn.disabled = false;
 		(section.querySelector('#lamport-digest') as HTMLElement).textContent =
 			`SHA-256("${msg.length > 24 ? msg.slice(0, 24) + '…' : msg}") = 0x${shortHex(digest, 16)}`;
 		(section.querySelector('#lamport-sig') as HTMLElement).textContent =
@@ -1676,10 +1930,43 @@ function renderLamportDemo(): HTMLElement {
 		await doVerify(tampered);
 	}
 
+	// Sign a second message under the same key — the mistake the whole hash-based
+	// signature literature is organised around avoiding. Every number reported
+	// here is derived from the two digests actually computed in this call.
+	async function doSignSecond(): Promise<void> {
+		if (!kp || !digest1) return;
+		sign2Btn.disabled = true;
+		const msg2 = msg2In.value;
+		const { sig: sig2, digest: d2 } = await lamportSign(kp, msg2);
+		leak = absorbSignature(leak, d2, sig2);
+		const differing = differingBits(digest1, d2, 256);
+		const stats = leakStats(leak);
+		const work = forgeWorkBits(leak);
+		(section.querySelector('#lamport-digest2') as HTMLElement).textContent =
+			`SHA-256("${msg2.length > 24 ? msg2.slice(0, 24) + '…' : msg2}") = 0x${shortHex(d2, 16)}`;
+		(section.querySelector('#lamport-leak-both') as HTMLElement).textContent =
+			`${stats.both} of 256 · digests differ at ${differing.length} positions`;
+		(section.querySelector('#lamport-leak-one') as HTMLElement).textContent =
+			`${stats.one} of 256 · attacker must match these exactly`;
+		(section.querySelector('#lamport-forge-work') as HTMLElement).textContent =
+			Number.isFinite(work)
+				? `≈ 2^${work} SHA-256 evaluations (was 2^256 after one signature)`
+				: 'impossible — some position leaks nothing';
+		(section.querySelector('#lamport-leak-note') as HTMLElement).innerHTML =
+			`Two signatures dropped the forgery grind from <strong>2<sup>256</sup></strong> to ` +
+			`<strong>2<sup>${work}</sup></strong> hashes — a colossal loss, and still far out of reach ` +
+			`of a browser tab. That is why the forgery below runs at a toy width: not because the ` +
+			`attack is different, but because ${work} bits of grinding is not something you watch happen. ` +
+			`Outlined cells in the grid are the ${stats.both} positions where both halves are now public.`;
+		paintDigestGrid(d2, true, true);
+		sign2Btn.disabled = false;
+	}
+
 	genBtn.addEventListener('click', () => void doGen());
 	signBtn.addEventListener('click', () => void doSign());
 	verifyBtn.addEventListener('click', () => void doVerify());
 	tamperBtn.addEventListener('click', () => void doTamper());
+	sign2Btn.addEventListener('click', () => void doSignSecond());
 	msgIn.addEventListener('input', () => {
 		// Editing the message after signing means the stored signature no longer matches.
 		// Clear verify status to avoid stale claims; user can re-sign for the new message.
@@ -1689,6 +1976,137 @@ function renderLamportDemo(): HTMLElement {
 			result.className = 'rec-line-value';
 		}
 	});
+
+	// ---- toy-width forgery lab -------------------------------------------
+	// Same primitives, narrower digest. The point is that nothing in the attack
+	// is special-cased: the forged signature is handed to lamportVerify, the
+	// identical function the 256-bit panel above calls, and the verdict printed
+	// is whatever that function returns.
+	let forgeBits = 12;
+	const forgeRunBtn = section.querySelector('#lamport-forge-run') as HTMLButtonElement;
+	const setText = (sel: string, text: string, cls?: string): void => {
+		const node = section.querySelector(sel) as HTMLElement;
+		node.textContent = text;
+		if (cls !== undefined) node.className = `rec-line-value ${cls}`;
+	};
+
+	section.addEventListener('click', (e) => {
+		const btn = (e.target as HTMLElement).closest('[data-forge-bits]') as HTMLButtonElement | null;
+		if (!btn) return;
+		forgeBits = Number(btn.dataset.forgeBits);
+		section.querySelectorAll<HTMLElement>('[data-forge-bits]').forEach((b) => {
+			const on = b === btn;
+			b.classList.toggle('is-active', on);
+			b.setAttribute('aria-pressed', String(on));
+		});
+		(section.querySelector('#forge-width-label') as HTMLElement).textContent = String(forgeBits);
+		(section.querySelector('#forge-width-note') as HTMLElement).textContent = String(forgeBits);
+	});
+
+	async function runForgery(): Promise<void> {
+		forgeRunBtn.disabled = true;
+		forgeRunBtn.textContent = 'Running…';
+		const w = forgeBits;
+		setText('#forge-verdict', '—', '');
+		setText('#forge-control', '—', '');
+
+		const toyKp = await lamportKeygen(w);
+		setText('#forge-keygen', `${w}-bit Lamport · ${2 * w} secrets of 32 B · pub = ${2 * w} SHA-256 commitments`);
+
+		const m1 = 'invoice 0001 — pay Acme Ltd 250.00';
+		const m2 = 'invoice 0002 — pay Acme Ltd 310.00';
+		const s1 = await lamportSign(toyKp, m1);
+		const s2 = await lamportSign(toyKp, m2);
+		const differing = differingBits(s1.digest, s2.digest, w);
+		setText(
+			'#forge-observed',
+			`"${m1}" and "${m2}" — truncated digests differ at ${differing.length} of ${w} positions`,
+		);
+
+		let toyLeak = absorbSignature(emptyLeak(w), s1.digest, s1.sig);
+		toyLeak = absorbSignature(toyLeak, s2.digest, s2.sig);
+		const stats = leakStats(toyLeak);
+		const work = forgeWorkBits(toyLeak);
+		setText(
+			'#forge-leak',
+			`both halves at ${stats.both} positions · one half at ${stats.one} · expected grind ≈ 2^${work} = ${Math.round(2 ** work).toLocaleString()} hashes`,
+		);
+
+		// Budget generously relative to the work this specific leak implies, and
+		// report an exhausted budget as an exhausted budget.
+		const budget = Math.min(300_000, Math.max(8192, 64 * 2 ** work));
+		const t0 = performance.now();
+		const forged = await forgeFromLeak(toyLeak, 'FORGED — pay Mallory 1000000.00 #', budget);
+		const dt = performance.now() - t0;
+
+		if (!forged.found) {
+			setText(
+				'#forge-search',
+				`no covered message in ${forged.tries.toLocaleString()} candidates (${dt.toFixed(0)} ms) — budget exhausted`,
+			);
+			setText('#forge-verdict', '— no forgery produced, so nothing to verify', 'lamport-bad');
+			setText('#forge-control', '—', '');
+			forgeRunBtn.disabled = false;
+			forgeRunBtn.textContent = 'Run the key-reuse forgery';
+			return;
+		}
+
+		setText(
+			'#forge-search',
+			`hit after ${forged.tries.toLocaleString()} candidate hashes (${dt.toFixed(0)} ms): "${forged.message}"`,
+		);
+
+		const check = await lamportVerify(toyKp.pub, forged.message!, forged.sig!);
+		setText(
+			'#forge-verdict',
+			check.ok
+				? `✓ ACCEPTED — lamportVerify() returned true on a message the key holder never signed`
+				: `✗ rejected — the forgery did not verify`,
+			check.ok ? 'lamport-ok' : 'lamport-bad',
+		);
+
+		// Control / failure path: a message the leak does NOT cover. The attacker
+		// substitutes the only half they hold at the uncovered positions; the real
+		// verifier catches every one of them, because SHA-256(wrong secret) is not
+		// the committed hash.
+		let control: { msg: string; sig: LamportSignature; subs: number } | null = null;
+		for (let n = 0; n < 5000 && !control; n++) {
+			const msg = `CONTROL — uncovered candidate #${n}`;
+			const digest = await digestMessage(msg);
+			if (digestCoveredBy(toyLeak, digest)) continue;
+			const sig: LamportSignature = [];
+			let subs = 0;
+			for (let i = 0; i < w; i++) {
+				const want = bitAt(digest, i);
+				const have = toyLeak[i][want];
+				if (have) {
+					sig.push(have);
+				} else {
+					subs++;
+					sig.push(toyLeak[i][want === 0 ? 1 : 0] as Uint8Array);
+				}
+			}
+			control = { msg, sig, subs };
+		}
+
+		if (!control) {
+			setText('#forge-control', 'every candidate was covered — no uncovered control available', '');
+		} else {
+			const controlCheck = await lamportVerify(toyKp.pub, control.msg, control.sig);
+			setText(
+				'#forge-control',
+				controlCheck.ok
+					? `✓ accepted — unexpected; the control message was covered after all`
+					: `✗ REJECTED — "${control.msg}" needed ${control.subs} half${control.subs === 1 ? '' : 's'} the attacker does not hold; the same verifier refuses it`,
+				controlCheck.ok ? 'lamport-bad' : 'lamport-ok',
+			);
+		}
+
+		forgeRunBtn.disabled = false;
+		forgeRunBtn.textContent = 'Run the key-reuse forgery';
+	}
+
+	forgeRunBtn.addEventListener('click', () => void runForgery());
 
 	return section;
 }

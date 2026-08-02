@@ -1,14 +1,23 @@
 import { describe, it, expect } from 'vitest';
 import {
+	absorbSignature,
 	bitAt,
 	determinant,
+	differingBits,
+	digestCoveredBy,
 	digestMessage,
+	emptyLeak,
+	forgeFromLeak,
+	forgeWorkBits,
 	isdPrangeBits,
 	lagrangeGaussReduce,
 	lagrangeGaussStep,
+	lagrangeGaussStepDetailed,
+	lagrangeGaussTrace,
 	lamportKeygen,
 	lamportSign,
 	lamportVerify,
+	leakStats,
 	log2Binom,
 	norm,
 	orthogonalityDefect,
@@ -350,5 +359,248 @@ describe('Lagrange–Gauss reduction', () => {
 		expect(shortestVector({ x: 1, y: 2 }, { x: 2, y: 4 })).toBeNull();
 		expect(shortestVector({ x: 3, y: 0 }, { x: -6, y: 0 })).toBeNull();
 		expect(shortestVector({ x: 0, y: 0 }, { x: 1, y: 1 })).toBeNull();
+	});
+});
+
+// =====================================================================
+// Key reuse: what a second signature actually hands the attacker, and
+// whether the forgery it enables is accepted by the REAL verifier.
+// =====================================================================
+describe('Lamport key reuse and forgery', () => {
+	it('keygen respects the width parameter', async () => {
+		const kp = await lamportKeygen(12);
+		expect(kp.priv.length).toBe(12);
+		expect(kp.pub.length).toBe(12);
+		expect(kp.priv[0][0].length).toBe(32);
+	});
+
+	it('rejects widths outside 1..256', async () => {
+		await expect(lamportKeygen(0)).rejects.toThrow(RangeError);
+		await expect(lamportKeygen(257)).rejects.toThrow(RangeError);
+		await expect(lamportKeygen(12.5)).rejects.toThrow(RangeError);
+	});
+
+	it('signs and verifies at a truncated width using the same routines', async () => {
+		const kp = await lamportKeygen(16);
+		const { sig } = await lamportSign(kp, 'toy width message');
+		expect(sig.length).toBe(16);
+		expect((await lamportVerify(kp.pub, 'toy width message', sig)).ok).toBe(true);
+		expect((await lamportVerify(kp.pub, 'toy width messagf', sig)).ok).toBe(false);
+	});
+
+	it('a signature of the wrong width never verifies', async () => {
+		const kp = await lamportKeygen(16);
+		const { sig } = await lamportSign(kp, 'm');
+		expect((await lamportVerify(kp.pub, 'm', sig.slice(0, 8))).ok).toBe(false);
+	});
+
+	it('one signature leaks exactly one half at every position', async () => {
+		const kp = await lamportKeygen(32);
+		const { sig, digest } = await lamportSign(kp, 'first');
+		const leak = absorbSignature(emptyLeak(32), digest, sig);
+		expect(leakStats(leak)).toEqual({ both: 0, one: 32, none: 0, bits: 32 });
+		// Expected grind is then a full preimage search on the truncated digest.
+		expect(forgeWorkBits(leak)).toBe(32);
+	});
+
+	it('two signatures leak both halves at exactly the differing bit positions', async () => {
+		const kp = await lamportKeygen(64);
+		const a = await lamportSign(kp, 'message one');
+		const b = await lamportSign(kp, 'message two');
+		let leak = absorbSignature(emptyLeak(64), a.digest, a.sig);
+		leak = absorbSignature(leak, b.digest, b.sig);
+		const diff = differingBits(a.digest, b.digest, 64);
+		const stats = leakStats(leak);
+		expect(stats.both).toBe(diff.length);
+		expect(stats.one).toBe(64 - diff.length);
+		expect(stats.none).toBe(0);
+		expect(forgeWorkBits(leak)).toBe(64 - diff.length);
+		// The both-leaked positions are precisely the differing ones.
+		for (const i of diff) {
+			expect(leak[i][0]).not.toBeNull();
+			expect(leak[i][1]).not.toBeNull();
+		}
+	});
+
+	it('an empty leak makes forgery impossible, not merely expensive', () => {
+		expect(forgeWorkBits(emptyLeak(8))).toBe(Number.POSITIVE_INFINITY);
+	});
+
+	it('forges a third signature that lamportVerify accepts', async () => {
+		// Toy width: the grind is ~2^(agreeing bits) ≈ 2^8, which finishes here.
+		// The scale is small; the attack is not simulated at any point.
+		const bits = 16;
+		const kp = await lamportKeygen(bits);
+		const a = await lamportSign(kp, 'invoice 0001');
+		const b = await lamportSign(kp, 'invoice 0002');
+		let leak = absorbSignature(emptyLeak(bits), a.digest, a.sig);
+		leak = absorbSignature(leak, b.digest, b.sig);
+
+		const res = await forgeFromLeak(leak, 'forged #', 200_000);
+		expect(res.found).toBe(true);
+		expect(res.tries).toBeGreaterThan(0);
+		// The forged message is one the key holder never signed.
+		expect(res.message).not.toBe('invoice 0001');
+		expect(res.message).not.toBe('invoice 0002');
+		// And the real verifier accepts it.
+		const check = await lamportVerify(kp.pub, res.message!, res.sig!);
+		expect(check.ok).toBe(true);
+	});
+
+	it('a forged signature is still bound to its message', async () => {
+		const bits = 16;
+		const kp = await lamportKeygen(bits);
+		const a = await lamportSign(kp, 'invoice 0001');
+		const b = await lamportSign(kp, 'invoice 0002');
+		let leak = absorbSignature(emptyLeak(bits), a.digest, a.sig);
+		leak = absorbSignature(leak, b.digest, b.sig);
+		const res = await forgeFromLeak(leak, 'forged #', 200_000);
+		expect(res.found).toBe(true);
+		// Substitute a message whose truncated digest differs from the forgery's:
+		// the same verifier rejects, because the revealed halves no longer match.
+		const forgedDigest = await digestMessage(res.message!);
+		let other = '';
+		for (let n = 0; n < 500; n++) {
+			const cand = `unrelated #${n}`;
+			const d = await digestMessage(cand);
+			if (differingBits(forgedDigest, d, bits).length > 0) {
+				other = cand;
+				break;
+			}
+		}
+		expect(other).not.toBe('');
+		expect((await lamportVerify(kp.pub, other, res.sig!)).ok).toBe(false);
+	});
+
+	it('a best-effort signature on an uncovered message is rejected', async () => {
+		// The control the demo shows: the attacker fills the positions they do not
+		// hold with the only half they do, and the real verifier catches it.
+		const bits = 16;
+		const kp = await lamportKeygen(bits);
+		const a = await lamportSign(kp, 'invoice 0001');
+		const b = await lamportSign(kp, 'invoice 0002');
+		let leak = absorbSignature(emptyLeak(bits), a.digest, a.sig);
+		leak = absorbSignature(leak, b.digest, b.sig);
+
+		let found = false;
+		for (let n = 0; n < 500 && !found; n++) {
+			const msg = `uncovered #${n}`;
+			const digest = await digestMessage(msg);
+			if (digestCoveredBy(leak, digest)) continue;
+			found = true;
+			const sig = [];
+			for (let i = 0; i < bits; i++) {
+				const want = bitAt(digest, i);
+				sig.push((leak[i][want] ?? leak[i][want === 0 ? 1 : 0])!);
+			}
+			expect((await lamportVerify(kp.pub, msg, sig)).ok).toBe(false);
+		}
+		expect(found).toBe(true);
+	});
+
+	it('reports an exhausted budget rather than inventing a forgery', async () => {
+		const kp = await lamportKeygen(24);
+		const a = await lamportSign(kp, 'only signature');
+		const leak = absorbSignature(emptyLeak(24), a.digest, a.sig);
+		// One signature ⇒ only the exact signed digest is covered ⇒ 2^24 expected.
+		const res = await forgeFromLeak(leak, 'hopeless #', 300);
+		expect(res.found).toBe(false);
+		expect(res.tries).toBe(300);
+		expect(res.sig).toBeUndefined();
+	});
+});
+
+// =====================================================================
+// Lagrange–Gauss: the sequence of steps, not just the endpoint.
+// =====================================================================
+describe('lagrangeGaussStepDetailed / lagrangeGaussTrace', () => {
+	it('reports the swap and the integer mu it actually used', () => {
+		// ‖b2‖ < ‖b1‖, so the step must swap before subtracting.
+		const s = lagrangeGaussStepDetailed({ x: 10, y: 0 }, { x: 1, y: 1 });
+		expect(s.swapped).toBe(true);
+		expect(s.mu).toBe(Math.round((10 * 1 + 0 * 1) / (1 * 1 + 1 * 1)));
+		expect(s.after.b1).toEqual({ x: 1, y: 1 });
+		expect(s.after.b2).toEqual({ x: 10 - s.mu * 1, y: 0 - s.mu * 1 });
+		expect(s.done).toBe(false);
+	});
+
+	it('flags the fixed point with mu = 0 and leaves the basis alone', () => {
+		const s = lagrangeGaussStepDetailed({ x: 1, y: 0 }, { x: 0, y: 1 });
+		expect(s.mu).toBe(0);
+		expect(s.done).toBe(true);
+		expect(s.after.b1).toEqual({ x: 1, y: 0 });
+		expect(s.after.b2).toEqual({ x: 0, y: 1 });
+	});
+
+	it('lagrangeGaussStep is the detailed step with the trace discarded', () => {
+		const bases: [Vec2, Vec2][] = [
+			[{ x: 5, y: 2 }, { x: 6, y: 2.4 }],
+			[{ x: 10, y: 0 }, { x: 1, y: 1 }],
+			[{ x: 3, y: 0 }, { x: 0, y: 2 }],
+			[{ x: 2, y: 0 }, { x: 1, y: Math.sqrt(3) }],
+		];
+		for (const [a, b] of bases) {
+			expect(lagrangeGaussStep(a, b)).toEqual(lagrangeGaussStepDetailed(a, b).after);
+		}
+	});
+
+	it('traces a bad basis through more than one step and ends at the fixed point', () => {
+		const trace = lagrangeGaussTrace({ x: 5, y: 2 }, { x: 7, y: 3 });
+		expect(trace.length).toBeGreaterThan(1);
+		expect(trace[trace.length - 1].done).toBe(true);
+		expect(trace[trace.length - 1].degenerate).toBe(false);
+		// Every non-final step must actually change something.
+		for (let i = 0; i < trace.length - 1; i++) {
+			expect(trace[i].done).toBe(false);
+			expect(trace[i].mu).not.toBe(0);
+		}
+		// Consecutive steps chain: each step starts where the previous ended.
+		for (let i = 1; i < trace.length; i++) {
+			expect(trace[i].before.b1).toEqual(trace[i - 1].after.b1);
+			expect(trace[i].before.b2).toEqual(trace[i - 1].after.b2);
+		}
+	});
+
+	it('the trace endpoint agrees with lagrangeGaussReduce and with shortestVector', () => {
+		for (let i = 1; i <= 40; i++) {
+			const b1: Vec2 = { x: ((i * 7) % 11) + 1, y: (i * 3) % 5 };
+			const b2: Vec2 = { x: (i * 5) % 13, y: ((i * 11) % 7) + 1 };
+			if (shortestVector(b1, b2) === null) continue;
+			const trace = lagrangeGaussTrace(b1, b2);
+			const end = trace[trace.length - 1].after;
+			const direct = lagrangeGaussReduce(b1, b2);
+			expect(norm(end.b1)).toBeCloseTo(norm(direct.b1), 9);
+			// Two dimensions: the reduced b1 is a shortest non-zero vector.
+			const sv = shortestVector(b1, b2)!;
+			expect(norm(end.b1)).toBeCloseTo(norm({ x: sv.x, y: sv.y }), 9);
+		}
+	});
+
+	it('never runs past its step cap', () => {
+		const trace = lagrangeGaussTrace({ x: 1, y: 2 }, { x: 2, y: 4 }, 25);
+		expect(trace.length).toBeLessThanOrEqual(25);
+	});
+
+	it('halts on a rank-1 input and says so instead of returning the zero vector', () => {
+		// b2 = 1.2·b1 exactly: determinant 0, so this is a line, not a lattice.
+		// Reduction drives b2 to (0, 0); without the degenerate flag the caller
+		// would present the zero vector as "the shortest non-zero vector".
+		const trace = lagrangeGaussTrace({ x: 5, y: 2 }, { x: 6, y: 2.4 });
+		const last = trace[trace.length - 1];
+		expect(last.done).toBe(true);
+		expect(last.degenerate).toBe(true);
+		expect(shortestVector({ x: 5, y: 2 }, { x: 6, y: 2.4 })).toBeNull();
+		// Same verdict for an exactly-zero vector and for a parallel integer pair.
+		expect(lagrangeGaussTrace({ x: 0, y: 0 }, { x: 1, y: 1 })[0].degenerate).toBe(true);
+		expect(lagrangeGaussTrace({ x: 1, y: 2 }, { x: 2, y: 4 })[0].degenerate).toBe(true);
+	});
+
+	it('a full-rank reduction never reports degeneracy', () => {
+		for (let i = 1; i <= 40; i++) {
+			const b1: Vec2 = { x: ((i * 7) % 11) + 1, y: (i * 3) % 5 };
+			const b2: Vec2 = { x: (i * 5) % 13, y: ((i * 11) % 7) + 1 };
+			if (shortestVector(b1, b2) === null) continue;
+			for (const s of lagrangeGaussTrace(b1, b2)) expect(s.degenerate).toBe(false);
+		}
 	});
 });

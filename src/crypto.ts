@@ -45,9 +45,19 @@ export function bitAt(digest: Uint8Array, i: number): 0 | 1 {
 	return ((digest[i >> 3] >> (7 - (i & 7))) & 1) as 0 | 1;
 }
 
-export async function lamportKeygen(): Promise<LamportKeypair> {
+// Width is a parameter, not a constant. The headline exhibit runs the real
+// 256-bit instance; the key-reuse forgery lab runs the SAME functions at a
+// deliberately tiny width where the attacker's grind is actually feasible in a
+// browser tab. One code path, two scales, so a forgery that verifies here
+// verifies through exactly the routine the 256-bit panel uses.
+export const LAMPORT_BITS = 256;
+
+export async function lamportKeygen(bits: number = LAMPORT_BITS): Promise<LamportKeypair> {
+	if (!Number.isInteger(bits) || bits < 1 || bits > 256) {
+		throw new RangeError(`lamportKeygen: bits must be an integer in 1..256, got ${bits}`);
+	}
 	const flatPriv: Uint8Array[] = [];
-	for (let i = 0; i < 512; i++) {
+	for (let i = 0; i < 2 * bits; i++) {
 		const s = new Uint8Array(32);
 		crypto.getRandomValues(s);
 		flatPriv.push(s);
@@ -55,7 +65,7 @@ export async function lamportKeygen(): Promise<LamportKeypair> {
 	const hashes = await Promise.all(flatPriv.map((s) => crypto.subtle.digest('SHA-256', asBuf(s))));
 	const priv: Uint8Array[][] = [];
 	const pub: Uint8Array[][] = [];
-	for (let i = 0; i < 256; i++) {
+	for (let i = 0; i < bits; i++) {
 		priv.push([flatPriv[2 * i], flatPriv[2 * i + 1]]);
 		pub.push([new Uint8Array(hashes[2 * i]), new Uint8Array(hashes[2 * i + 1])]);
 	}
@@ -68,7 +78,7 @@ export async function lamportSign(
 ): Promise<{ sig: LamportSignature; digest: Uint8Array }> {
 	const digest = await digestMessage(msg);
 	const sig: LamportSignature = [];
-	for (let i = 0; i < 256; i++) {
+	for (let i = 0; i < kp.priv.length; i++) {
 		sig.push(kp.priv[i][bitAt(digest, i)]);
 	}
 	return { sig, digest };
@@ -80,8 +90,9 @@ export async function lamportVerify(
 	sig: LamportSignature,
 ): Promise<{ ok: boolean; digest: Uint8Array }> {
 	const digest = await digestMessage(msg);
+	if (sig.length !== pub.length) return { ok: false, digest };
 	const hashes = await Promise.all(sig.map((s) => crypto.subtle.digest('SHA-256', asBuf(s))));
-	for (let i = 0; i < 256; i++) {
+	for (let i = 0; i < pub.length; i++) {
 		const expected = pub[i][bitAt(digest, i)];
 		const actual = new Uint8Array(hashes[i]);
 		if (expected.length !== actual.length) return { ok: false, digest };
@@ -90,6 +101,116 @@ export async function lamportVerify(
 		}
 	}
 	return { ok: true, digest };
+}
+
+// ---------------------------------------------------------------------
+// 1b. What key reuse actually hands an attacker
+// ---------------------------------------------------------------------
+//
+// A Lamport signature IS the revealed key material. An eavesdropper who sees a
+// signature on m learns priv[i][bit_i(H(m))] for every i and nothing else.
+// Collect several signatures and the known material accumulates: at every
+// position where two digests disagree the attacker ends up holding BOTH
+// preimages, and at those positions they can sign either bit.
+//
+// A forgery on m* is possible exactly when the attacker holds priv[i][b] for
+// b = bit_i(H(m*)) at every i — i.e. when H(m*) is "covered" by the leak. With
+// k signatures a random message is covered with probability ≈ 2^-(#positions
+// where the leak is one-sided), so at 256 bits and two signatures the grind is
+// ~2^128 and hopeless; at the toy widths in the forgery lab it finishes in a
+// few hundred hashes. Nothing about the mathematics changes — only the scale.
+
+/** Known private halves: leak[i][b] is the secret for bit value b, or null. */
+export type LeakedKey = (Uint8Array | null)[][];
+
+export function emptyLeak(bits: number): LeakedKey {
+	return Array.from({ length: bits }, () => [null, null] as (Uint8Array | null)[]);
+}
+
+/** Fold one observed (digest, signature) pair into the attacker's known set. */
+export function absorbSignature(
+	leak: LeakedKey,
+	digest: Uint8Array,
+	sig: LamportSignature,
+): LeakedKey {
+	const out: LeakedKey = leak.map((pair) => [pair[0], pair[1]]);
+	for (let i = 0; i < out.length && i < sig.length; i++) {
+		out[i][bitAt(digest, i)] = sig[i];
+	}
+	return out;
+}
+
+export type LeakStats = { both: number; one: number; none: number; bits: number };
+
+export function leakStats(leak: LeakedKey): LeakStats {
+	let both = 0;
+	let one = 0;
+	let none = 0;
+	for (const pair of leak) {
+		const k = (pair[0] ? 1 : 0) + (pair[1] ? 1 : 0);
+		if (k === 2) both++;
+		else if (k === 1) one++;
+		else none++;
+	}
+	return { both, one, none, bits: leak.length };
+}
+
+/** Positions at which two digests disagree — where reuse leaks both halves. */
+export function differingBits(a: Uint8Array, b: Uint8Array, bits: number): number[] {
+	const out: number[] = [];
+	for (let i = 0; i < bits; i++) {
+		if (bitAt(a, i) !== bitAt(b, i)) out.push(i);
+	}
+	return out;
+}
+
+/** True when every bit of `digest` selects a half the attacker already holds. */
+export function digestCoveredBy(leak: LeakedKey, digest: Uint8Array): boolean {
+	for (let i = 0; i < leak.length; i++) {
+		if (!leak[i][bitAt(digest, i)]) return false;
+	}
+	return true;
+}
+
+/**
+ * log2 of the expected number of candidate messages an attacker must hash
+ * before one is covered by `leak`. Each one-sided position halves the chance;
+ * a position with neither half known makes forgery impossible outright.
+ */
+export function forgeWorkBits(leak: LeakedKey): number {
+	const { one, none } = leakStats(leak);
+	return none > 0 ? Number.POSITIVE_INFINITY : one;
+}
+
+export type ForgeResult = {
+	found: boolean;
+	tries: number;
+	message?: string;
+	sig?: LamportSignature;
+};
+
+/**
+ * Search `prefix + n` for a message whose digest the leak covers, and assemble
+ * the forged signature from the leaked halves. Real SHA-256 on every candidate;
+ * returns found:false when the budget runs out, which is the honest outcome
+ * whenever the leak is too one-sided for the budget given.
+ */
+export async function forgeFromLeak(
+	leak: LeakedKey,
+	prefix: string,
+	maxTries = 200_000,
+): Promise<ForgeResult> {
+	for (let n = 0; n < maxTries; n++) {
+		const message = `${prefix}${n}`;
+		const digest = await digestMessage(message);
+		if (!digestCoveredBy(leak, digest)) continue;
+		const sig: LamportSignature = [];
+		for (let i = 0; i < leak.length; i++) {
+			sig.push(leak[i][bitAt(digest, i)] as Uint8Array);
+		}
+		return { found: true, tries: n + 1, message, sig };
+	}
+	return { found: false, tries: maxTries };
 }
 
 // =====================================================================
@@ -177,14 +298,74 @@ export function shortestVec(
 // One step of Lagrange–Gauss reduction in 2D. Ensures ‖b1‖ ≤ ‖b2‖ then
 // subtracts the nearest integer multiple of b1 from b2. Iterating this to a
 // fixed point yields the (provably) shortest basis in 2D.
-export function lagrangeGaussStep(b1: Vec2, b2: Vec2): { b1: Vec2; b2: Vec2 } {
+//
+// The detailed form reports what the step actually did — whether it swapped,
+// which integer μ it rounded to, and whether the basis was already at the fixed
+// point — because the swap/subtract sequence is the part worth watching. The
+// plain `lagrangeGaussStep` below is the same computation with the trace thrown
+// away, kept because callers and KATs use it.
+export type LagrangeStep = {
+	/** ‖b2‖ < ‖b1‖ on entry, so the vectors were exchanged before subtracting. */
+	swapped: boolean;
+	/** μ = round(⟨b1,b2⟩ / ⟨b1,b1⟩) after ordering. μ = 0 means the fixed point. */
+	mu: number;
+	before: { b1: Vec2; b2: Vec2 };
+	after: { b1: Vec2; b2: Vec2 };
+	/** True when this step changed nothing: the basis is Lagrange-reduced. */
+	done: boolean;
+	/**
+	 * The pair spans a line (or a point), not a 2D lattice. Reduction halts here
+	 * and there is no shortest NON-ZERO vector for it to have found — reporting
+	 * `done` without this flag would let a caller present the zero vector, or a
+	 * float-noise vector of length 1e-16, as the answer.
+	 */
+	degenerate: boolean;
+};
+
+export function lagrangeGaussStepDetailed(b1: Vec2, b2: Vec2): LagrangeStep {
+	const before = { b1, b2 };
+	let swapped = false;
 	if (norm(b2) < norm(b1)) {
 		const tmp = b1;
 		b1 = b2;
 		b2 = tmp;
+		swapped = true;
 	}
-	const mu = Math.round(dot(b1, b2) / dot(b1, b1));
-	return { b1, b2: { x: b2.x - mu * b1.x, y: b2.y - mu * b1.y } };
+	// Same rank test shortestVector() uses, and for the same reason: an exact
+	// `det === 0` check is useless in floating point, because a parallel pair
+	// reduces to a vector of length ~1e-16 rather than to exactly (0, 0) and the
+	// next μ then divides by that noise. The determinant is invariant under the
+	// unimodular operations below, so testing it each step is testing the input.
+	const scale = norm(b1) * norm(b2);
+	if (!(scale > 0) || determinant(b1, b2) <= 1e-9 * scale) {
+		return { swapped, mu: 0, before, after: { b1, b2 }, done: true, degenerate: true };
+	}
+	const d = dot(b1, b1);
+	const mu = Math.round(dot(b1, b2) / d);
+	const after =
+		mu === 0 ? { b1, b2 } : { b1, b2: { x: b2.x - mu * b1.x, y: b2.y - mu * b1.y } };
+	return { swapped, mu, before, after, done: mu === 0, degenerate: false };
+}
+
+export function lagrangeGaussStep(b1: Vec2, b2: Vec2): { b1: Vec2; b2: Vec2 } {
+	return lagrangeGaussStepDetailed(b1, b2).after;
+}
+
+/**
+ * Every step the reduction takes, in order, ending with the step that reports
+ * `done` (μ = 0). The last entry's `after` is the reduced basis. Capped so a
+ * degenerate basis cannot spin forever; an uncapped trace would be a hang.
+ */
+export function lagrangeGaussTrace(b1: Vec2, b2: Vec2, maxSteps = 200): LagrangeStep[] {
+	const steps: LagrangeStep[] = [];
+	let cur = { b1, b2 };
+	for (let i = 0; i < maxSteps; i++) {
+		const step = lagrangeGaussStepDetailed(cur.b1, cur.b2);
+		steps.push(step);
+		cur = step.after;
+		if (step.done) break;
+	}
+	return steps;
 }
 
 export type ShortestVector = { x: number; y: number; a: number; b: number };
