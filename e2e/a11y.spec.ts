@@ -1,91 +1,61 @@
-import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+import {
+  boot,
+  driveAllStates,
+  expectBaselineNotStale,
+  NARROW,
+  reportCollected,
+  watchPageErrors,
+} from './gate';
 
 /**
- * WCAG regression gate. Scans the full page with every collapsible expanded,
- * every tab panel revealed, and the live demos driven, in both themes.
+ * WCAG A/AA regression gate.
+ *
+ * The lab is driven along everything it teaches: the arrival state, with three
+ * panels hidden and four Lamport controls locked; both skip links focused; all
+ * three audience modes, which fade every non-headline section to `opacity: 0.55`
+ * and which the gate this replaces never selected; all five families and, on a
+ * broken one, all four subview panes — including Math, whose rows reach their
+ * visible state only through an animation; the pin drawer filled and emptied;
+ * every recommender need and priority; all five handshake presets including the
+ * broken combination that raises `#hs-broken`, hybrid off and on, both extra
+ * certificate chain depths and the largest KEM and signature on the page; the
+ * Lamport lab from locked controls through keygen, sign, verify, tamper, the
+ * two-signature key-reuse leak and the toy-width forgery at all three widths;
+ * every lattice basis, one reduction step, the fixed point and a focused SVG
+ * handle; all three ISD parameter sets and both slider extremes; all three size
+ * metrics; all five context tabs; both disclosures; and the copy-link flash.
+ * Every one of those states is scanned, in both themes, at desktop and phone
+ * width.
+ *
+ * See `gate.ts` for why nothing is injected into the page (this lab's
+ * reduced-motion handling is three separate blocks and one of them is the only
+ * reason twelve of its thirteen sections are visible at all), why no panel is
+ * force-revealed, why no button is clicked by regex, why the lab's defaults are
+ * asserted rather than assumed, and why `violations` is not the whole oracle.
  */
 
-const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
-
-async function revealEverything(page: Page): Promise<void> {
-  // Neutralize animations/transitions/opacity so nothing is mid-flight or dimmed.
-  await page.addStyleTag({
-    content: `*,*::before,*::after{transition:none!important;animation:none!important}`,
+for (const theme of ['dark', 'light'] as const) {
+  test(`no WCAG A/AA violations in ${theme} theme`, async ({ page, context }) => {
+    test.setTimeout(1_800_000);
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    const errors = watchPageErrors(page);
+    await boot(page, theme);
+    await driveAllStates(page, theme);
+    expectBaselineNotStale();
+    expect(errors, errors.join('\n')).toEqual([]);
+    reportCollected();
   });
 
-  // Open every <details>.
-  await page.evaluate(() => {
-    document.querySelectorAll('details').forEach((d) => {
-      (d as HTMLDetailsElement).open = true;
-    });
+  test(`no WCAG A/AA violations in ${theme} theme at 380px`, async ({ page, context }) => {
+    test.setTimeout(1_800_000);
+    await context.grantPermissions(['clipboard-read', 'clipboard-write']);
+    const errors = watchPageErrors(page);
+    await page.setViewportSize(NARROW);
+    await boot(page, theme);
+    await driveAllStates(page, `${theme} @380px`);
+    expectBaselineNotStale();
+    expect(errors, errors.join('\n')).toEqual([]);
+    reportCollected();
   });
-
-  // Reveal every tab panel and class-toggled panel; unhide anything hidden.
-  await page.evaluate(() => {
-    document
-      .querySelectorAll('[hidden], .tab-panel, [role="tabpanel"], .panel, .accordion-panel')
-      .forEach((el) => {
-        el.removeAttribute('hidden');
-        (el as HTMLElement).style.display = '';
-        (el as HTMLElement).classList.add('is-active', 'active', 'open');
-        (el as HTMLElement).classList.remove('is-hidden');
-      });
-  });
-
-  // Drive live demos: dispatch a click on any run/generate/attack/step button
-  // so dynamically injected result regions get rendered and scanned. Done fully
-  // in-page (no per-element round trips) to stay fast and DOM-stable.
-  await page.evaluate(() => {
-    const run =
-      /run|gen|sign|attack|step|start|compute|solve|search|encrypt|next|play|reset|calc/i;
-    const skip = /theme|toggle|copy|github|menu|skip/i;
-    document.querySelectorAll('button').forEach((btn) => {
-      const label = (btn.getAttribute('aria-label') ?? btn.textContent ?? '').trim();
-      if (skip.test(label)) return;
-      if (run.test(label)) {
-        try {
-          btn.click();
-        } catch {
-          /* ignore */
-        }
-      }
-    });
-  });
-
-  // Re-open details / re-reveal after any demo re-render.
-  await page.evaluate(() => {
-    document.querySelectorAll('details').forEach((d) => {
-      (d as HTMLDetailsElement).open = true;
-    });
-    document.querySelectorAll('[hidden]').forEach((el) => el.removeAttribute('hidden'));
-  });
-  await page.waitForTimeout(200);
 }
-
-async function scan(page: Page): Promise<void> {
-  const results = await new AxeBuilder({ page }).withTags(TAGS).analyze();
-  const summary = results.violations.map((v) => ({
-    id: v.id,
-    impact: v.impact,
-    help: v.help,
-    nodes: v.nodes.map((n) => n.target.join(' ')).slice(0, 8),
-  }));
-  expect(summary).toEqual([]);
-}
-
-test('no WCAG A/AA violations in dark theme', async ({ page }) => {
-  await page.goto('.');
-  await expect(page.locator('#app')).toBeVisible();
-  await revealEverything(page);
-  await scan(page);
-});
-
-test('no WCAG A/AA violations in light theme', async ({ page }) => {
-  await page.goto('.');
-  await expect(page.locator('#app')).toBeVisible();
-  await page.locator('#cl-theme-toggle').click();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await revealEverything(page);
-  await scan(page);
-});

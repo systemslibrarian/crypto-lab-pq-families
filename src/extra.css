@@ -22,7 +22,7 @@
 
 .maturity-chip.scenario-status--pending {
   background: color-mix(in oklab, var(--accent) 18%, transparent);
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .maturity-chip.scenario-status--invalid {
@@ -548,7 +548,7 @@
   border: 1px solid var(--line);
 }
 
-.tl-event.tl-tone--theory .tl-kind { color: var(--accent); border-color: color-mix(in oklab, var(--accent) 40%, transparent); }
+.tl-event.tl-tone--theory .tl-kind { color: var(--accent-ink); border-color: color-mix(in oklab, var(--accent) 40%, transparent); }
 .tl-event.tl-tone--broken .tl-kind { color: var(--accent-2); border-color: var(--warning-border); }
 .tl-event.tl-tone--standard .tl-kind { color: var(--accent-4); border-color: color-mix(in oklab, var(--accent-4) 40%, transparent); }
 .tl-event.tl-tone--milestone .tl-kind { color: var(--accent-3); border-color: color-mix(in oklab, var(--accent-3) 40%, transparent); }
@@ -850,7 +850,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   background: rgba(11, 127, 171, 0.14);
-  color: var(--accent);
+  color: var(--accent-ink);
   border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
   cursor: help;
 }
@@ -991,7 +991,7 @@
 }
 
 .ref-title a {
-  color: var(--accent);
+  color: var(--accent-ink);
   text-decoration: underline;
   text-decoration-color: color-mix(in oklab, var(--accent) 40%, transparent);
 }
@@ -1023,7 +1023,7 @@
 
 .glossary-term {
   margin: 0;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--mono);
   font-size: 0.86rem;
   font-weight: 700;
@@ -1119,7 +1119,7 @@
   filter: drop-shadow(0 0 0 3px var(--accent-3));
 }
 
-.lat-b1-name { color: var(--accent); font-weight: 700; }
+.lat-b1-name { color: var(--accent-ink); font-weight: 700; }
 .lat-b2-name { color: var(--accent-2); font-weight: 700; }
 
 .lat-readout {
@@ -1291,7 +1291,7 @@
 }
 
 .impl-footnote a {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 /* Shor callout inside info panels */
@@ -1327,7 +1327,7 @@
 
 .inline-details summary {
   cursor: pointer;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 0.86rem;
   font-weight: 600;
   list-style: none;
@@ -1532,7 +1532,7 @@
 }
 
 .size-row--pinned .size-name {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .size-row--pinned .size-track {
@@ -1601,24 +1601,21 @@
   flex-shrink: 0;
 }
 
-/* audience-mode emphasis: non-headline sections fade, headline sections
-   get an accent ribbon. Defaults (no attribute, or "all") leave both alone. */
-html[data-audience='student'] .lab-section:not([data-audience~='student']),
-html[data-audience='engineer'] .lab-section:not([data-audience~='engineer']),
-html[data-audience='executive'] .lab-section:not([data-audience~='executive']) {
-  opacity: 0.55;
-  transition: opacity 220ms ease, filter 220ms ease;
-}
+/* audience-mode emphasis: headline sections get an accent border and ribbon.
+   Defaults (no attribute, or "all") leave them alone. */
+/* The de-emphasis half of this used to be `opacity: 0.55` on every
+   non-headline section. Opacity compounds, and it compounded onto EVERY ink in
+   those sections at once: measured through the gate, picking any audience took
+   about ninety further selectors below 4.5:1 in both themes — .section-kicker
+   from 5.6:1 to 2.55:1, .rec-chip-desc to 2.28:1, .hero-metric-label to 1.05:1,
+   the glossary terms to 2.22:1. There is no opacity value that fixes that,
+   because the inks it multiplies start at 4.6-5.6:1 and any factor below 1
+   pushes some of them under. A faded section is also not an inactive
+   component, so nothing exempts it.
 
-html[data-audience='student'] .lab-section:not([data-audience~='student']):hover,
-html[data-audience='student'] .lab-section:not([data-audience~='student']):focus-within,
-html[data-audience='engineer'] .lab-section:not([data-audience~='engineer']):hover,
-html[data-audience='engineer'] .lab-section:not([data-audience~='engineer']):focus-within,
-html[data-audience='executive'] .lab-section:not([data-audience~='executive']):hover,
-html[data-audience='executive'] .lab-section:not([data-audience~='executive']):focus-within {
-  opacity: 1;
-}
-
+   The emphasis half is kept and is what the control was actually for: the
+   headline sections still take the accent border below, which is a cue that
+   costs no contrast. */
 html[data-audience='student'] .lab-section[data-audience~='student'],
 html[data-audience='engineer'] .lab-section[data-audience~='engineer'],
 html[data-audience='executive'] .lab-section[data-audience~='executive'] {
@@ -1634,12 +1631,6 @@ html[data-audience='executive'] .lab-section[data-audience~='executive']::before
   margin: -28px -28px 18px;
   border-radius: 28px 28px 0 0;
   background: linear-gradient(90deg, var(--accent), var(--accent-4));
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html[data-audience] .lab-section {
-    transition: none !important;
-  }
 }
 
 @media (max-width: 720px) {
@@ -1990,7 +1981,7 @@ html[data-audience='executive'] .lab-section[data-audience~='executive']::before
 }
 
 .panel-bench-label {
-  color: var(--accent);
+  color: var(--accent-ink);
   font-weight: 700;
   margin-right: 6px;
 }
@@ -2390,4 +2381,211 @@ html[data-audience='executive'] .lab-section[data-audience~='executive']::before
   .tl-marker {
     margin-top: 0;
   }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   WCAG corrections, measured through e2e/gate.ts.
+
+   Every number below is a before/after ratio taken from the live page in the
+   state named, at both themes and both viewport widths. Nothing here is a
+   guess, and nothing here weakens a check to make it pass.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* SC 1.4.3 — links had NO author colour anywhere in this lab, so they took the
+   UA default, which follows prefers-color-scheme rather than this page's
+   data-theme. On a light page with an OS-dark browser that is rgb(158,158,255)
+   at 2.29:1. `color-scheme` in style.css fixes the UA side; this makes the
+   colour the lab's own regardless. */
+.lab-section a,
+.hero-panel a,
+.cl-hero a,
+footer a {
+  color: var(--accent-ink);
+}
+
+/* SC 1.4.3 — .mono-inline paints a near-black chip (--mono-block-bg) and sets
+   --mono-block-fg to go on it, but .rec-line-value and .size-value are the same
+   specificity and land LATER in the cascade, so they replaced that ink with
+   --ink-strong. In the dark theme --ink-strong is near-white and the mistake is
+   invisible; in the light theme it is near-black on a near-black chip: 1.07:1,
+   across every generated value this lab shows — the Lamport private key, public
+   key, both digests, the signature, both leak counts, all four forgery
+   readouts, every ISD figure and every size value. Two classes, so this wins on
+   specificity rather than on order. */
+.mono-inline.rec-line-value,
+.mono-inline.size-value,
+.rec-line-value.mono-inline,
+.size-value.mono-inline {
+  color: var(--mono-block-fg);
+}
+
+/* SC 1.4.3 — text painted on an --accent / --accent-4 fill. White is correct in
+   the light theme (7.79:1) and wrong in the dark one, where those fills are pale
+   cyan and white measured 1.89:1. --on-accent flips per theme. */
+.audience-btn.is-active,
+.rec-try,
+.remember-num,
+.lamport-btn--primary {
+  color: var(--on-accent);
+}
+
+/* SC 1.4.3 — the byte labels drawn INSIDE the handshake segments. Each segment
+   is a different fill and three of the six are pastel `color-mix(…, white)`, so
+   one ink cannot serve them all. Near-black reads on every pale fill; the two
+   saturated fills take the theme's own on-accent ink. Worst case after: 4.67:1
+   (--accent-2 in light, white) against 1.47:1 before. */
+.hs-seg {
+  color: #12101a;
+}
+
+.hs-seg--kempk,
+.hs-seg--sigpk {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .hs-seg--kempk,
+[data-theme='dark'] .hs-seg--sigpk {
+  color: #12101a;
+}
+
+/* SC 1.4.3 — amber as INK. --accent-3 is chosen to be a light fill; on a light
+   page it measured 1.59-1.82:1 wherever it was used for text. */
+.tl-event.tl-tone--milestone .tl-kind,
+.isd-cat--mid,
+.impl-glyph.impl-exp {
+  color: var(--accent-3-ink);
+}
+
+/* SC 1.4.3 — the "broken" chip took --accent-2 on its own red tint: 4.18:1
+   light and 4.34:1 dark. --warning-fg is the ink this palette already defines
+   for exactly that tint. */
+.maturity-chip.scenario-status--invalid {
+  color: var(--warning-fg);
+}
+
+/* SC 1.4.3 — opacity used to de-emphasise where size and ink already do.
+   .impl-none was 2.93:1 light / 3.15:1 dark at .6; the two chip sub-labels were
+   4.49:1 light at .78. All three clear 5:1 at full strength. */
+.impl-glyph.impl-none,
+.rec-chip-desc,
+.hs-chip-fam,
+.pin-chip-fam,
+.attack-venue {
+  opacity: 1;
+}
+
+/* SC 1.4.11 — control boundaries. --border-strong is defined in style.css with
+   a comment saying it is for control boundaries, and it was applied to exactly
+   ONE control: the Lamport message field. Every other control on this page drew
+   its edge from --line, a decorative hairline
+   (rgba(33,26,43,0.12) / rgba(200,190,220,0.14)), which composites to
+   1.07-1.38:1 against the panel behind it — including the ACTIVE family tab and
+   the ACTIVE subview tab, whose fill differs from its surround by 1.15:1 and
+   1.07:1 respectively, so the border is the only thing that says which tab is
+   selected to anyone who cannot see the colour shift. */
+.tab-button,
+.subview-tab,
+.hs-chip,
+.hs-preset,
+.hs-chain-btn,
+.rec-chip,
+.pin-btn,
+.pin-apply,
+.pin-clear,
+.copy-link,
+.theme-toggle,
+.lamport-btn {
+  border-color: var(--border-strong);
+}
+
+/* SC 1.4.3 — the KEM segments are the two --accent fills that carry white
+   text. --accent as a FILL is #0b7fab, and white on it is exactly 4.50:1 — on
+   the floor, where a one-unit rounding either way decides pass or fail. The ink
+   variant of the same hue takes it to 7.79:1, and the pale sibling with it. */
+.hs-seg--kempk {
+  background: var(--accent-ink);
+}
+
+.hs-seg--kemct {
+  background: color-mix(in oklab, var(--accent-ink) 65%, white);
+}
+
+/* SC 2.1.1 + 2.4.7 — the comparison table scrolls horizontally at every
+   viewport this gate measures (920px of content in a 312px box at 380px wide)
+   and held no focusable content, so axe's `scrollable-region-focusable` fired
+   on it. `renderTable`/`renderImplStatus` now give it tabindex="0" and a
+   region role; this is the focus indicator that has to come with it. */
+.table-shell:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* SC 1.4.11 — the SELECTED state of every chip and tab. Each `.is-active`
+   variant paints `--mono-block-bg` as its fill AND as its border, which in the
+   dark theme is a near-black chip on a near-black panel: 1.24:1 fill, and a
+   border the same colour as the fill, so nothing delineates the control at all
+   and "which one is selected" is carried by the ink alone. Two classes, so
+   these beat the resting rule above on specificity as well as order. */
+.tab-button.is-active,
+.subview-tab.is-active,
+.hs-chip.is-active,
+.hs-preset.is-active,
+.hs-chain-btn.is-active,
+.rec-chip.is-active {
+  border: 1px solid var(--border-strong);
+}
+
+/* SC 1.4.11 — the "broken scheme" affordance. `--warning-border` is a 16-20%
+   alpha tint that composites to 1.25:1 against the panel, so the dashed edge
+   that is the whole non-colour cue for a broken scheme was not visible as a
+   boundary. `--accent-2` is the ink this palette already uses for that meaning:
+   5.37:1 dark, 4.86:1 light. The dash pattern is kept. */
+.hs-chip.is-broken,
+.hs-preset.is-warn {
+  border-color: var(--accent-2);
+}
+
+/* SC 1.4.3 — three more places white ink is painted on an --accent /
+   --accent-4 fill, all of which are pale cyan/mint in the dark theme:
+   the pinned-scheme button once pinned (1.87:1), "Apply to handshake calc"
+   (1.89:1), and the copy-link confirmation flash (3.09:1 dark). The flash also
+   failed at 4.28:1 in the LIGHT theme, because its fill is
+   `color-mix(--accent-4 70%, transparent)` — 70% of an ink chosen to be read
+   AGAINST, not painted on. Making that fill solid takes it to 7.39:1. */
+.pin-btn.is-pinned,
+.pin-btn.is-pinned *,
+.pin-apply,
+.pin-apply * {
+  color: var(--on-accent);
+}
+
+.copy-link.is-copied {
+  background: var(--accent-4);
+  border-color: var(--accent-4);
+  color: var(--on-accent);
+}
+
+/* SC 1.4.3 + 1.4.11 — the unpin "×". Its resting fill is 18% white over the
+   near-black pin chip: 1.67:1 against the chip, so the button had no
+   perceivable boundary at all, and its HOVER state — which is the state a
+   reader is in the instant after clicking it — painted white on --accent-2 at
+   3.05:1. 60% white gives the resting button a 6.70:1 boundary and lets the
+   glyph take the chip's own dark ink at the same 6.70:1. */
+.pin-chip-x {
+  background: color-mix(in oklab, #fff 60%, transparent);
+  color: var(--mono-block-bg);
+}
+
+.pin-chip-x:hover {
+  background: var(--accent-2);
+  color: var(--on-accent);
+}
+
+/* SC 1.4.3 — --accent-2 as ink on its own --warning-bg tint: 4.34:1 dark and
+   4.48:1 light on the Lamport tamper button, 4.29:1 on the broken-combo preset.
+   --warning-fg is the ink this palette defines for that tint (7.0:1 / 10.2:1). */
+.lamport-btn--warn,
+.hs-preset.is-warn {
+  color: var(--warning-fg);
 }

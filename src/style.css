@@ -11,13 +11,51 @@
      --panel-strong, 3.59:1 on --panel, 3.54:1 on the field's own fill, 3.48:1 / 3.26:1
      on the two --surface-bg gradient stops. --line is left unchanged for decorative
      rules — card outlines, dividers, table rules. */
-  --border-strong: #858586;
+  /* Re-measured against the DARKEST surface it actually lands on, which is not
+     white and not any of the flat panels: the page paints two radial washes
+     over the top-left and top-right, and the hero's #copy-link sits under one
+     of them, on rgb(216,212,208). #858586 measured 2.49:1 there while clearing
+     3.26:1 everywhere the original note checked. #6e6e70 measures 3.45:1 on
+     that surface and 5.09:1 on white. */
+  --border-strong: #6e6e70;
   --panel: rgba(255, 252, 248, 0.84);
   --panel-strong: rgba(255, 255, 255, 0.92);
   --accent: #0b7fab;
   --accent-2: #c43b3b;
   --accent-3: #edb444;
-  --accent-4: #136f63;
+  /* --accent-4 darkened for SC 1.4.3. It is used as INK as well as a fill, and
+     the darkest surface it inks is its own 18-22% tint: #136f63 measured 4.32:1
+     on .maturity-chip--valid and 4.19:1 on .impl-glyph.impl-ship. #0f6156
+     measures 5.28:1 there and 7.39:1 for white text painted on it. */
+  --accent-4: #0f6156;
+  /* --accent as INK, which is a different requirement from --accent as a FILL
+     and is why this is a separate token rather than a darker --accent.
+     #0b7fab is a perfectly good fill, but as text it measured 2.88:1
+     (.cl-hero-why-label), 3.56:1 (.maturity-chip--pending), 3.75:1 (.sec-chip),
+     4.17:1 (.panel-bench-label), 4.26:1 (a <summary>) and 4.36:1
+     (.lat-b1-name) — because the darkest surface it lands on is not white but
+     the page under its own top-left radial wash, rgb(205,207,206). #095975 is
+     4.95:1 there and 7.79:1 on white. Keeping --accent itself unchanged also
+     leaves the shared .cl-topbar exactly as every other lab in the fleet has
+     it: that bar reads `var(--accent, #35d6bb)` out of :root, so darkening
+     --accent here would have quietly moved a fleet-shared component's own
+     measurements — 1.58:1 down to 1.30:1 — in a repo that is not allowed to
+     change it. */
+  --accent-ink: #095975;
+  /* --accent-3 is an amber chosen to be a light FILL; as an INK on a light page
+     it is 1.59-1.82:1. Text that wants the amber semantic uses this instead:
+     5.80:1 on the page, 5.08:1 on the amber tint --accent-3 itself makes. */
+  --accent-3-ink: #8a5a00;
+  /* Ink for text painted ON an --accent / --accent-4 fill. White is right in
+     this theme (7.79:1 on --accent); in the dark theme those fills are pale
+     cyan and white measures 1.89:1, so it flips to near-black (9.98:1). */
+  --on-accent: #ffffff;
+  /* Declared so the UA's own defaults follow the LAB's theme, not the OS's.
+     Without it a reader whose OS is dark but who picks this page's light theme
+     gets the dark-scheme UA link colour, rgb(158,158,255), on a white page:
+     2.29:1, and no author rule anywhere overrides it because this stylesheet
+     never set a link colour at all. */
+  color-scheme: light;
   --shadow: 0 20px 60px rgba(34, 21, 40, 0.15);
   --mono: 'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
   --sans: 'Space Grotesk', 'Segoe UI', sans-serif;
@@ -56,13 +94,24 @@
      ramp as the dark --line, is >=3.42:1 on every surface the field sits on: 4.07:1 /
      3.69:1 on the --surface-bg gradient stops, 3.96:1 on the field's own fill, 3.73:1
      on --panel, 3.42:1 on --panel-strong. */
-  --border-strong: #787284;
+  /* Raised from #787284, which measured 2.95:1 on the pinned drawer's
+     `color-mix(in oklab, var(--accent) 8%, var(--panel-strong))` surface — a
+     composite the original note never checked. #837d90 measures 3.45:1 there
+     and is stronger on every surface the note did check. */
+  --border-strong: #837d90;
   --panel: rgba(30, 26, 38, 0.88);
   --panel-strong: rgba(38, 33, 48, 0.94);
   --accent: #4dc3f7;
   --accent-2: #f06868;
   --accent-3: #f0c95a;
+  --accent-3-ink: #f0c95a;
+  /* In this theme the accent is already pale enough to be read on every
+     surface it inks — 6.7:1 or better — so ink and fill are the same value. */
+  --accent-ink: #4dc3f7;
   --accent-4: #3dd9c4;
+  /* See the :root note — the accent fills are pale here, so their ink flips. */
+  --on-accent: #12101a;
+  color-scheme: dark;
   --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
   --surface-bg: linear-gradient(180deg, #12101a 0%, #1a1624 100%);
   --surface-radial-1: rgba(77, 195, 247, 0.08);
@@ -99,7 +148,7 @@ body {
   z-index: 100;
   padding: 12px 18px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 700;
   border-radius: 0 0 12px 0;
   text-decoration: none;
@@ -158,7 +207,7 @@ button {
   padding: 10px 14px;
   border-radius: 999px;
   background: rgba(11, 127, 171, 0.12);
-  color: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--mono);
   font-size: 0.84rem;
   text-decoration: none;
@@ -170,7 +219,7 @@ button {
 
 .eyebrow {
   margin: 0;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-size: 0.9rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -219,11 +268,22 @@ button {
   color: var(--metric-fg);
 }
 
+/* --metric-muted is a near-white, chosen for the near-black --metric-bg panel
+   `.hero-metric-card` paints. This class is used far outside that card — it is
+   the generic small-caps label for the recommender, the handshake controls, the
+   ISD sliders, the Lamport fields and the lattice trace, all of which sit on
+   LIGHT panels. There it measured 1.05:1. The near-white ink is now scoped to
+   the one container it was written for; everywhere else takes the page's own
+   muted ink, which is 5.5:1 or better on every surface it lands on. */
 .hero-metric-label {
   margin: 0;
   font-size: 0.82rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.hero-metric-card .hero-metric-label {
   color: var(--metric-muted);
 }
 
@@ -243,7 +303,10 @@ button {
 .cl-hero{display:flex;align-items:flex-start;justify-content:space-between;gap:clamp(1rem,4vw,3rem);flex-wrap:wrap;margin:clamp(1rem,3vw,2rem) 0 1.5rem;}
 .cl-hero-main{flex:1 1 22rem;min-width:min(100%,20rem);}
 .cl-hero-title{margin:0;font-size:clamp(1.6rem,3.8vw,2.7rem);font-weight:700;line-height:1.1;letter-spacing:.01em;}
-.cl-hero-sub{margin:.4rem 0 0;font-size:clamp(.9rem,1.6vw,1.05rem);letter-spacing:.01em;opacity:.85;}
+/* The .85 opacity is gone: --ink-soft on the radially-washed hero surface is
+   5.52:1 at full strength and 4.06:1 faded, and the smaller size plus the
+   lighter ink already carry the de-emphasis this was for. */
+.cl-hero-sub{margin:.4rem 0 0;font-size:clamp(.9rem,1.6vw,1.05rem);letter-spacing:.01em;}
 .cl-hero-desc{margin:.55rem 0 0;font-size:1rem;line-height:1.5;color:var(--text-dim);max-width:60ch;}
 .cl-hero-why{flex:0 1 min(40%,26rem);min-width:min(100%,15rem);border:1px solid var(--border);border-radius:10px;padding:.85rem 1.05rem;background:color-mix(in oklab,var(--accent) 6%,transparent);}
 .cl-hero-why-label{display:block;font-size:.68rem;font-weight:700;letter-spacing:.14em;}
@@ -260,7 +323,7 @@ button {
 .cl-hero{--text-dim:var(--ink-soft);--border:var(--line);position:relative;padding-top:3.5rem;}
 .cl-hero-title{color:var(--ink-strong);}
 .cl-hero-sub{color:var(--ink-soft);}
-.cl-hero-why-label{color:var(--accent);}
+.cl-hero-why-label{color:var(--accent-ink);}
 .cl-hero-why-text{color:var(--ink);}
 @media (min-width:1025px){.cl-hero{padding-top:0;}.cl-hero-main{padding-right:3rem;}}
 
@@ -386,7 +449,7 @@ button {
 }
 
 .scenario-status--pending {
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .scenario-status--valid {

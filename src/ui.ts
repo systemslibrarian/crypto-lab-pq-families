@@ -1012,7 +1012,10 @@ function renderTable(): HTMLElement {
         <p class="section-footnote">Every family on one row. Public-key range spans the schemes shown in the explorer above. Rows with a pin glyph contain a pinned scheme.</p>
       </div>
     </div>
-    <div class="table-shell">
+    <!-- WCAG 2.1.1: this table is wider than its box at every viewport, so the
+         wrapper is a scroll container with no focusable content of its own —
+         unreachable from a keyboard until it is made a focus target. -->
+    <div class="table-shell" role="region" tabindex="0" aria-label="Head-to-head comparison of the five families">
       <table class="math-table">
         <thead>
           <tr>
@@ -1629,7 +1632,8 @@ function renderImplStatus(): HTMLElement {
         </p>
       </div>
     </div>
-    <div class="table-shell">
+    <!-- WCAG 2.1.1 — see the note on the head-to-head table. -->
+    <div class="table-shell" role="region" tabindex="0" aria-label="Which libraries ship which scheme">
       <table class="math-table impl-table">
         <thead>
           <tr><th>Scheme</th>${LIBS.map((l) => `<th>${l}</th>`).join('')}</tr>
@@ -2321,14 +2325,19 @@ function renderRecommender(): HTMLElement {
 function renderInfoTabs(): HTMLElement {
 	const section = el('section', 'lab-section');
 
+	// WCAG 1.4.10 — four columns of prose overflow the DOCUMENT at 380px
+	// (516px of scrollWidth in a 380px viewport), so the table scrolls inside its
+	// own container, and 2.1.1 then requires that container to be a focus target.
 	const categoriesTable = `
+		<div class="table-shell" role="region" tabindex="0" aria-label="NIST PQC security categories">
 		<table class="math-table" style="min-width:0">
 			<thead><tr><th>Cat</th><th>Effort floor</th><th>Pegged to</th><th>Where it shows up</th></tr></thead>
 			<tbody>${SECURITY_CATEGORIES.map(
 				(c) =>
 					`<tr><td><strong>${c.level}</strong></td><td class="mono-cell">${c.floor}</td><td>${c.example}</td><td>${c.note}</td></tr>`,
 			).join('')}</tbody>
-		</table>`;
+		</table>
+		</div>`;
 
 	const panels: Record<string, string> = {
 		Shor: `<p>Peter Shor\u2019s 1994 quantum algorithm factors integers and computes discrete logarithms in polynomial time. That single result breaks RSA, Diffie\u2013Hellman, and elliptic-curve cryptography \u2014 the backbone of today\u2019s public-key security \u2014 once a sufficiently large, fault-tolerant quantum computer exists.</p><p>Post-quantum families are chosen precisely because no efficient quantum algorithm is known for their underlying problems. Grover\u2019s algorithm still gives a quadratic speedup against symmetric primitives, which is why AES-256 and SHA-384 remain recommended.</p><div class="callout"><p class="callout-title">How big a machine?</p><p>Gidney &amp; Eker\u00e5 (2019) estimate that factoring RSA-2048 with a surface code at a 10\u207b\u00b3 physical error rate needs \u2248 <strong>20 million noisy qubits</strong> and \u2248 <strong>8 hours</strong> of runtime. Current hardware is on the order of <strong>10\u00b3 noisy qubits</strong> with much higher error rates \u2014 the gap is several orders of magnitude, but it shrinks every year, and "harvest now, decrypt later" doesn't require parity today.</p></div>`,
@@ -2739,7 +2748,26 @@ function wireStickyNav(shell: HTMLElement): void {
 			if (best && byId.has(best.id)) {
 				const link = byId.get(best.id)!;
 				// Keep the active link in view inside the horizontally scrollable rail
-				link.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+				// by scrolling THE RAIL, not by calling link.scrollIntoView().
+				//
+				// WCAG 2.4.1. scrollIntoView() moves the document's sequential focus
+				// navigation starting point onto the element it scrolls to, and this
+				// observer fires on mount — so on a freshly loaded page, before any
+				// interaction, the first Tab landed in the middle of this nav rail
+				// instead of on the skip link, which is the first focusable element in
+				// the document and exists precisely to be reachable in one keystroke.
+				// It also stole the starting point back on every scroll. Scrolling the
+				// container has the same visual effect and no focus side effect.
+				const rail = link.parentElement;
+				if (rail) {
+					const lr = link.getBoundingClientRect();
+					const rr = rail.getBoundingClientRect();
+					if (lr.left < rr.left + 8) {
+						rail.scrollBy({ left: lr.left - rr.left - 12, behavior: 'smooth' });
+					} else if (lr.right > rr.right - 8) {
+						rail.scrollBy({ left: lr.right - rr.right + 12, behavior: 'smooth' });
+					}
+				}
 			}
 		},
 		{ threshold: [0, 0.1, 0.25, 0.5, 0.75, 1], rootMargin: '-80px 0px -40% 0px' },
