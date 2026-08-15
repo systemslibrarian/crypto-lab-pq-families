@@ -70,7 +70,7 @@ Every family panel additionally includes:
 
 ## Tech
 
-Vite + TypeScript, zero runtime dependencies. The comparison corpus, history timeline, and classical baseline live in a single typed module (`src/data.ts`); the UI is plain DOM in `src/ui.ts`. Dark mode by default with a persisted theme toggle, log-scale charts with a metric switch, an interactive handshake-bytes visualiser, URL deep-linking, and number-key shortcuts. WAI-ARIA tablists with keyboard navigation throughout.
+Vite + TypeScript, zero runtime dependencies. The comparison corpus, history timeline, and classical baseline live in a single typed module (`src/data.ts`); the UI is plain DOM in `src/ui.ts`. Dark mode throughout, log-scale charts with a metric switch, an interactive handshake-bytes visualiser, URL deep-linking, and number-key shortcuts. WAI-ARIA tablists with keyboard navigation throughout.
 
 All of the mathematics — Lamport keygen/sign/verify, the leak and forgery machinery, the Prange
 ratio, and Lagrange–Gauss reduction — lives in `src/crypto.ts` as pure functions, so the unit tests
