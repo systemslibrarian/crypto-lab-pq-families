@@ -776,9 +776,11 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
   await page.keyboard.press('Tab');
   await expect(page.locator('a.cl-skip-link')).toBeFocused();
   await scanAt('shared skip link focused (tab stop 1)');
-  for (let i = 0; i < 5; i++) await page.keyboard.press('Tab');
+  // Four, not five: the shared bar used to carry a theme toggle between the
+  // brand and the lab's own skip link, and removing it removed a tab stop.
+  for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
   await expect(page.locator('a.skip-link')).toBeFocused();
-  await scanAt("the lab's own skip link focused (tab stop 6)");
+  await scanAt("the lab's own skip link focused (tab stop 5)");
 
   // ── The audience filter: the 0.55 whole-section fade ────────────────────
   for (const who of ['student', 'engineer', 'executive'] as const) {
