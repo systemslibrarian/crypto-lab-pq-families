@@ -1114,9 +1114,27 @@
   cursor: grabbing;
 }
 
-.lat-handle:focus-visible {
-  outline: none;
-  filter: drop-shadow(0 0 0 3px var(--accent-3));
+/* `:focus`, not `:focus-visible`, and an outline rather than a drop-shadow.
+   Both halves of that were bugs.
+
+   `drop-shadow()` takes offset-x, offset-y and blur — it has no spread — so
+   `drop-shadow(0 0 0 3px …)` was invalid and every browser dropped the whole
+   declaration. Paired with `outline: none` that left the focused handle with NO
+   focus indicator at all.
+
+   And `:focus-visible` does not match when focus arrives after a pointer
+   interaction, which is exactly how this handle is normally reached: click a
+   basis preset, then Tab or script focus onto the handle to steer it with the
+   arrow keys. In that case the author rule never applied and Chromium fell back
+   to its own `outline: auto 5px -webkit-focus-ring-color`, whose colour is
+   platform-dependent — a near-black on the Linux CI runner, measuring 1.21:1
+   against this SVG's `--panel-strong` backdrop and failing WCAG 1.4.11.
+   Owning the ring on plain `:focus` makes the indicator ours on every platform
+   and in both focus modes: `--accent-3` measures 8.0:1 against the panel as it
+   actually composites, rgb(54,48,65). */
+.lat-handle:focus {
+  outline: 2px solid var(--accent-3);
+  outline-offset: 2px;
 }
 
 .lat-b1-name { color: var(--accent-ink); font-weight: 700; }
