@@ -705,7 +705,7 @@ function renderHandshakeCalculator(): HTMLElement {
 		},
 		{
 			id: 'conservative',
-			label: 'Conservative',
+			label: 'Code/hash diversity',
 			kem: 'Classic McEliece 348864',
 			sig: 'SLH-DSA-128f (SPHINCS+)',
 			hybrid: false,
@@ -1433,7 +1433,7 @@ function renderISDCalc(): HTMLElement {
         <p class="section-kicker">Calculate</p>
         <h2>ISD Work: Prange Attack Cost for Code Parameters</h2>
         <p class="section-footnote">
-          Each Prange ISD trial succeeds with probability C(n−k, t) / C(n, t), so expected work is <span class="mono-inline">C(n, t) / C(n−k, t)</span>. Slide n, k, t and watch the cost move relative to NIST's category floors. Note that <em>raw</em> Prange (1962) is the weakest ISD variant: at the McEliece parameter sets it lands close to — and for the higher sets slightly below — the nominal floors. The parameter sets were sized for margin against the <em>best-known</em> ISD, not textbook Prange, so this is an order-of-magnitude teaching tool, not the standardisation analysis.
+		  Each Prange ISD trial succeeds with probability C(n−k, t) / C(n, t), so expected work is <span class="mono-inline">C(n, t) / C(n−k, t)</span>. Slide n, k, t and watch the generic decoding cost move relative to NIST's category floors. Raw Prange does not model modern ISD or structural key-recovery attacks on masked Goppa codes. Weis (ePrint 2026/1984, preprint) estimates such an attack below generic ISD costs for the candidate sets under stated heuristics. This is a teaching tool, not an overall security estimate.
         </p>
       </div>
     </div>
@@ -1479,7 +1479,7 @@ function renderISDCalc(): HTMLElement {
         <span class="rec-line-value mono-inline isd-trials"></span>
       </div>
       <div class="rec-line">
-        <span class="rec-line-label">NIST category fit</span>
+        <span class="rec-line-label">Prange only vs NIST floors</span>
         <span class="rec-line-value isd-cat"></span>
       </div>
     </div>
@@ -1490,7 +1490,10 @@ function renderISDCalc(): HTMLElement {
       Both–May 2018) tighten the asymptotic exponent and shave bits at typical PQC parameters; NIST's
       category floors of 143 / 207 / 272 classical bits at Cat 1 / 3 / 5 are pegged to those best-known
       attacks with memory constraints. The point of the slider is to feel how n, k, t trade off — not to
-      reproduce the standardisation analyses bit-for-bit.
+		  reproduce the standardisation analyses bit-for-bit. Nor does it include
+		  <a href="https://eprint.iacr.org/2026/1984" target="_blank" rel="noopener noreferrer">structural key recovery</a>:
+		  the September 2026 preprint estimates lower costs under stated heuristics,
+		  with a completed recovery only on a toy-sized key.
     </p>
   `;
 
@@ -1524,8 +1527,8 @@ function renderISDCalc(): HTMLElement {
 
 		// Compare raw Prange cost against the NIST classical floors descriptively.
 		// Raw Prange is the weakest ISD, so "≥ floor" here means the *textbook*
-		// attack already exceeds it; the real parameter sets have margin against
-		// stronger ISD variants that this simple estimate does not model.
+		// attack already exceeds it; this says nothing about modern ISD or
+		// masked-Goppa structural attacks.
 		const cat = !valid
 			? '—'
 			: bits >= 272
@@ -1535,7 +1538,7 @@ function renderISDCalc(): HTMLElement {
 					: bits >= 143
 						? 'Prange cost ≥ Cat 1 floor (2^143 classical)'
 						: bits >= 100
-							? 'Prange cost near Cat 1 floor (best-known ISD is stronger)'
+							? 'Prange cost near Cat 1 floor (other attacks not modeled)'
 							: 'Prange cost < 2^100 — well below PQC-grade';
 		const catEl = section.querySelector('.isd-cat') as HTMLElement;
 		catEl.textContent = cat;
@@ -2181,8 +2184,8 @@ const RECOMMENDATIONS: Record<string, Recommendation> = {
 	'kem:output': {
 		kem: 'Classic McEliece 348864',
 		hybrid: false,
-		rationale: 'McEliece ciphertexts are tiny (~96 B) and the scheme is unbroken since 1978 — the most conservative choice.',
-		caveat: 'But the public key is ~255 KB. Only viable if you can pin keys ahead of time.',
+			rationale: 'McEliece ciphertexts are tiny (~96 B) and a code-based assumption adds diversity, but a 2026 preprint estimates structural key recovery below generic ISD costs.',
+			caveat: 'The public key is ~255 KB; the new estimates use heuristics and do not show a practical production break. Evaluate both before deployment.',
 	},
 	'kem:pk': {
 		kem: 'ML-KEM-768 (Kyber)',

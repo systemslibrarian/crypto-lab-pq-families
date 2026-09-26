@@ -3,6 +3,7 @@ import {
 	CLASSICAL_BASELINE,
 	FAMILIES,
 	SECURITY_CATEGORIES,
+	TIMELINE,
 	formatBytes,
 	type Scheme,
 } from './data.ts';
@@ -71,6 +72,16 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		expect(CLASSICAL_BASELINE.sigPub).toBe(64);
 		expect(CLASSICAL_BASELINE.sigOut).toBe(64);
 	});
+});
+
+it('describes the structural McEliece estimate as a preprint with only a toy recovery', () => {
+	const code = FAMILIES.find((f) => f.id === 'code')!;
+	const attack = code.attacks.find((a) => a.name.includes('Weis'))!;
+	expect(attack.venue).toContain('preprint');
+	expect(attack.summary).toContain('toy key only');
+	expect(code.references.find((r) => r.url === 'https://eprint.iacr.org/2026/1984')).toBeDefined();
+	expect(TIMELINE.find((e) => e.title.includes('Structural estimates'))?.kind).toBe('milestone');
+	expect(findScheme('Classic McEliece 348864').maturity).toBe('research');
 });
 
 // =====================================================================

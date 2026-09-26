@@ -29,11 +29,9 @@ export interface Scheme {
 
 export interface Attack {
 	/**
-	 * Citation convention for every entry below: `year` is the year of the first
-	 * peer-reviewed publication venue \u2014 not the ePrint/arXiv year, and not the
-	 * year the result was first announced. Where those differ, `summary` says so.
-	 * Implementation-flaw disclosures with no venue carry the disclosure year and
-	 * label it as such in `venue`.
+	 * Use the first peer-reviewed venue year when available. For a preprint or
+	 * disclosure without a venue, use its posting year and mark its status in
+	 * `venue` and `summary`.
 	 */
 	year: number;
 	name: string;
@@ -201,14 +199,15 @@ export const FAMILIES: Family[] = [
 		maturity: 'standardized',
 		confidence: 80,
 		summary:
-			'The oldest post-quantum family, dating to McEliece in 1978 and unbroken since. Confidence is very high, but classic McEliece public keys are enormous. NIST selected HQC in 2025 as a code-based KEM backup to lattice-based ML-KEM.',
+			'The oldest post-quantum family, dating to McEliece in 1978. No production-size Classic McEliece key recovery has been demonstrated, but a 2026 preprint estimates a cheaper structural attack under stated heuristics. Its public keys are enormous. NIST selected HQC in 2025 as a code-based KEM backup to lattice-based ML-KEM.',
 		strengths: [
-			'McEliece has survived 45+ years of cryptanalysis \u2014 the conservative choice',
+			'Distinct code-based assumption; no practical production-parameter break demonstrated',
 			'Fast encapsulation and decapsulation',
 			'Algorithmic diversity: a hedge if lattices are ever broken',
 		],
 		weaknesses: [
 			'Classic McEliece public keys are hundreds of kilobytes to over a megabyte',
+			'2026 preprint estimates structural key recovery below generic ISD costs for Classic McEliece under heuristic and memory-model assumptions',
 			'HQC and BIKE are younger and less battle-tested than McEliece',
 			'Side-channel surface (timing in decoding) is comparatively under-studied',
 		],
@@ -225,7 +224,7 @@ export const FAMILIES: Family[] = [
 				securityCategory: 1,
 				performance: 'Encap and decap are fast; key generation takes seconds (computing a Goppa-code support).',
 				cyclesNote: 'keygen ≈ 150M · encap ≈ 50k · decap ≈ 150k cycles (ref impl, Skylake)',
-				note: 'Niederreiter-style KEM over a binary Goppa code. Huge public key, tiny ciphertext; maximal conservatism.',
+				note: 'Niederreiter-style KEM over a binary Goppa code. Huge public key, tiny ciphertext; structural estimates are below generic ISD work factors, without a practical production-key recovery.',
 			},
 			{
 				name: 'HQC-128',
@@ -257,9 +256,9 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		mathProblem:
-			'Syndrome Decoding Problem (SDP): Given a parity-check matrix H ∈ F_2^(r × n), a syndrome s ∈ F_2^r and a weight bound t ≥ 0, find e ∈ F_2^n with weight(e) ≤ t and H·e^T = s.\n\nDecision-SDP is NP-complete (Berlekamp–McEliece–Tilborg, 1978). McEliece-style schemes additionally rely on the indistinguishability of a hidden Goppa code from a uniformly random linear code.',
+			'Syndrome Decoding Problem (SDP): Given a parity-check matrix H ∈ F_2^(r × n), a syndrome s ∈ F_2^r and a weight bound t ≥ 0, find e ∈ F_2^n with weight(e) ≤ t and H·e^T = s.\n\nDecision-SDP is NP-complete for general codes (Berlekamp–McEliece–Tilborg, 1978). Worst-case hardness does not prove that masked Goppa public keys are random or exclude structural attacks; a 2026 preprint gives a distinguisher and estimated key recovery.',
 		reductionNote:
-			'McEliece transforms a generator matrix of a Goppa code via secret permutation and invertible mixing so the public matrix looks random. Security rests on (1) SDP being hard for random codes and (2) the masked Goppa code being indistinguishable from random.',
+			'McEliece transforms a Goppa-code matrix via secret permutation and invertible mixing so the public matrix looks random. Generic ISD estimates address decoding; structural attacks may exploit hidden Goppa properties despite that appearance. Weis (ePrint 2026/1984, preprint) estimates key recovery below generic ISD costs for candidate parameters, under stated heuristics.',
 		attacks: [
 			{
 				year: 1962,
@@ -280,6 +279,12 @@ export const FAMILIES: Family[] = [
 				year: 2023,
 				name: 'HQC timing-leak fixes',
 				summary: 'Side-channel against the rejection-sampling step; patched in NIST-submission reference code.',
+			},
+			{
+				year: 2026,
+				name: 'Weis / GIJS structural attack on Classic McEliece',
+				venue: 'ePrint 2026/1984 (preprint; revised September 25)',
+				summary: 'Estimated key recovery: 2^94–2^102 bit operations without memory costs, or 2^110–2^128 with the paper’s memory accounting, across five candidate sets. Heuristic assumptions; completed recovery on a toy key only, not a production break.',
 			},
 		],
 		references: [
@@ -313,6 +318,13 @@ export const FAMILIES: Family[] = [
 				year: 2017,
 				title: 'Classic McEliece — submission specification',
 				url: 'https://classic.mceliece.org',
+			},
+			{
+				authors: 'Stephen A. Weis',
+				year: 2026,
+				title: 'Improving GIJS Key Recovery for Classic McEliece (preprint)',
+				venue: 'IACR ePrint 2026/1984; revised September 25, 2026',
+				url: 'https://eprint.iacr.org/2026/1984',
 			},
 		],
 	},
@@ -678,7 +690,7 @@ export const TIMELINE: TimelineEvent[] = [
 		year: 1978,
 		title: 'McEliece cryptosystem',
 		kind: 'theory',
-		body: 'Robert McEliece proposes the first code-based encryption scheme. It is still unbroken 47+ years later — the conservative benchmark every later PQC scheme is measured against.',
+		body: 'Robert McEliece proposes the first code-based encryption scheme. Decades of study have not produced a practical production break, though security estimates continue to change.',
 	},
 	{
 		year: 1994,
@@ -727,6 +739,12 @@ export const TIMELINE: TimelineEvent[] = [
 		title: 'HQC selected as second KEM',
 		kind: 'standard',
 		body: 'NIST chooses HQC as a code-based backup to ML-KEM, securing algorithmic diversity in the KEM portfolio in case lattices are ever weakened.',
+	},
+	{
+		year: 2026,
+		title: 'Structural estimates for Classic McEliece',
+		kind: 'milestone',
+		body: 'Weis (IACR ePrint 2026/1984, preprint) estimates key recovery below generic decoding costs under stated heuristics. A toy key is recovered; no practical production-key break is demonstrated.',
 	},
 ];
 
