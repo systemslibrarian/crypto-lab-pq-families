@@ -20,6 +20,7 @@ Select any of the five families to see its hard problem, strengths and weaknesse
 
 ## What Can Go Wrong
 
+- **Confusing implementation leakage with a broken lattice assumption** — [Zhou et al. (ePrint 2026/2124, September 22, 2026)](https://eprint.iacr.org/2026/2124) report Falcon power-trace key recovery on PQClean/ARM Cortex-M4; [Jahandideh (ePrint 2026/2137, September 22, 2026)](https://eprint.iacr.org/2026/2137) studies one-trace ML-KEM key-generation leakage on optimized Cortex-M4. These target-specific results do not change FIPS 203's final status or show a generic mathematical break.
 - **Treating "post-quantum" as permanent** — Rainbow (multivariate) and SIKE (isogeny) were both broken in 2022; selecting a family on reputation alone is risky, which is why NIST standardised a diverse portfolio.
 - **Assuming age rules out structural cryptanalysis** — Classic McEliece has no demonstrated practical production break, but [Weis (ePrint 2026/1984; revised September 25, 2026)](https://eprint.iacr.org/2026/1984) estimates key recovery below generic ISD costs for its candidate sets under explicit heuristics. Its public keys also measure hundreds of kilobytes, which can be prohibitive for constrained protocols.
 - **Confusing what a family provides** — hash-based schemes do signatures only and cannot perform key exchange; picking a family without checking KEM-vs-signature support is a common early mistake.

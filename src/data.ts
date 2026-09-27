@@ -82,7 +82,7 @@ export const FAMILIES: Family[] = [
 		],
 		weaknesses: [
 			'Larger keys than classical ECC (kilobytes, not dozens of bytes)',
-			'Implementation pitfalls: timing leaks (KyberSlash), fault and rejection-sampling attacks',
+			'Implementation pitfalls: timing (KyberSlash), physical power leakage during ML-KEM keygen and Falcon signing, and fault attacks; target and leakage model matter',
 			'Security relies on relatively young structured-lattice assumptions',
 		],
 		schemes: [
@@ -126,7 +126,7 @@ export const FAMILIES: Family[] = [
 				securityCategory: 1,
 				performance: 'Verification fast; signing dominated by constant-time Gaussian sampling over NTRU lattices.',
 				cyclesNote: 'keygen ≈ 20M · sign ≈ 0.7M · verify ≈ 90k cycles (ref impl, Skylake)',
-				note: 'Hash-and-sign via the GPV framework; compact signatures but a notoriously tricky implementation.',
+				note: 'Hash-and-sign via GPV; compact signatures, but difficult to harden. A 2026 preprint (ePrint 2026/2124) reports power-trace key recovery against PQClean Falcon signing on ARM Cortex-M4; this is an implementation attack under physical observation, not a break of the lattice problem.',
 			},
 		],
 		mathProblem:

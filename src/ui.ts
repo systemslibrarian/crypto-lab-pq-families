@@ -2162,7 +2162,7 @@ const RECOMMENDATIONS: Record<string, Recommendation> = {
 		sig: 'Falcon-512',
 		hybrid: false,
 		rationale: 'Falcon produces the smallest standardised PQC signatures (~666 B). Paired with ML-KEM, this is the wire-efficiency stack.',
-		caveat: 'Falcon needs constant-time floating-point sampling — easy to get wrong in implementation.',
+		caveat: 'Falcon signing requires careful timing and physical-leakage hardening: ePrint 2026/2124 reports power-trace key recovery on PQClean/ARM Cortex-M4. This preprint is target-specific, not a generic break of Falcon.',
 	},
 	'both:pk': {
 		kem: 'ML-KEM-768 (Kyber)',
