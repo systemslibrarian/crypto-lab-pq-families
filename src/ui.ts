@@ -2161,7 +2161,7 @@ const RECOMMENDATIONS: Record<string, Recommendation> = {
 		kem: 'ML-KEM-768 (Kyber)',
 		sig: 'Falcon-512',
 		hybrid: false,
-		rationale: 'Falcon produces the smallest standardised PQC signatures (~666 B). Paired with ML-KEM, this is the wire-efficiency stack.',
+		rationale: 'Falcon produces the smallest signatures of any NIST-selected PQC scheme (≈666 B padded). Paired with ML-KEM, this is the wire-efficiency stack — at the cost of depending on a scheme whose standard, FIPS 206, is still in development.',
 		caveat: 'Falcon signing requires careful timing and physical-leakage hardening: ePrint 2026/2124 reports power-trace key recovery on PQClean/ARM Cortex-M4. This preprint is target-specific, not a generic break of Falcon.',
 	},
 	'both:pk': {
@@ -2794,7 +2794,7 @@ function renderRemember(): HTMLElement {
         <span class="remember-num">1</span>
         <div class="remember-body">
           <p class="remember-title">Lattices are the default production answer today.</p>
-          <p class="panel-copy">ML-KEM and ML-DSA are NIST's primary KEM and signature (FIPS 203 / 204). Falcon ships compact signatures (FIPS 206 / FN-DSA). Together they cover almost every protocol.</p>
+          <p class="panel-copy">ML-KEM and ML-DSA are NIST's primary KEM and signature (FIPS 203 / 204). Falcon offers the most compact signatures, though its standard (FIPS 206 / FN-DSA) is still in development. Together they cover almost every protocol.</p>
         </div>
       </li>
       <li class="remember-item">

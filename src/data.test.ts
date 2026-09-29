@@ -69,6 +69,19 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		}
 	});
 
+	// FALCON was selected in 2022; FIPS 206 (FN-DSA) is "in development" on NIST's
+	// own project page and absent from the CSRC FIPS publications list, which holds
+	// only 203/204/205 as final. So Falcon is SELECTED, never standardized, and the
+	// standard label must not imply a draft exists for a reader to go and read.
+	// Verified against CSRC 2026-09-29.
+	it('Falcon is selected, not standardized, and no FIPS 206 draft is implied', () => {
+		const s = findScheme('Falcon-512');
+		expect(s.maturity).toBe('selected');
+		expect(s.standard).toContain('FIPS 206');
+		expect(s.standard).not.toMatch(/draft/i);
+		expect(s.standard).toMatch(/in development/i);
+	});
+
 	// FIPS 205, SLH-DSA-128f — tiny key, large signature.
 	it('SLH-DSA-128f (SPHINCS+)', () => {
 		const s = findScheme('SLH-DSA-128f (SPHINCS+)');

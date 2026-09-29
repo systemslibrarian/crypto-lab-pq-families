@@ -124,7 +124,14 @@ export const FAMILIES: Family[] = [
 			},
 			{
 				name: 'Falcon-512',
-				standard: 'FIPS 206 (draft, FN-DSA)',
+				// NOT "draft": no draft of FIPS 206 has been published. NIST's PQC
+				// project page lists FN-DSA as "in development", and FIPS 206 does not
+				// appear in the CSRC FIPS publications list, which holds 203/204/205 as
+				// final (2024-08-13). Saying "draft" implies a document a reader could
+				// go and read.
+				// https://csrc.nist.gov/projects/post-quantum-cryptography/post-quantum-cryptography-standardization
+				// Verified against CSRC 2026-09-29.
+				standard: 'FIPS 206 (in development, FN-DSA)',
 				kind: 'Signature',
 				pubKey: 897,
 				secretKey: 1281,
