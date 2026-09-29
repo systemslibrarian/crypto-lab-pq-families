@@ -247,7 +247,7 @@ function renderExplorer(): HTMLElement {
           <div class="math-summary-grid math-summary-grid--three">
             <div><p class="hero-metric-label">Public key</p><p class="mono-inline">${formatBytes(s.pubKey)}</p></div>
             <div><p class="hero-metric-label">Secret key</p><p class="mono-inline">${formatBytes(s.secretKey)}</p></div>
-            <div><p class="hero-metric-label">${s.outputLabel}</p><p class="mono-inline">${formatBytes(s.output)}</p></div>
+            <div><p class="hero-metric-label">${s.outputLabel}</p><p class="mono-inline">${s.outputNote ? `≈${formatBytes(s.output)}` : formatBytes(s.output)}</p>${s.outputNote ? `<p class="panel-bench">${s.outputNote}</p>` : ''}</div>
           </div>
           ${s.performance ? `<p class="panel-copy panel-perf"><strong>Performance:</strong> ${s.performance}</p>` : ''}
           ${s.cyclesNote ? `<p class="panel-bench"><span class="panel-bench-label">Cycles:</span> ${s.cyclesNote}</p>` : ''}

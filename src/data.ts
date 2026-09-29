@@ -19,6 +19,14 @@ export interface Scheme {
 	secretKey: number; // bytes
 	output: number; // ciphertext (KEM) or signature (Sig) bytes
 	outputLabel: 'ciphertext' | 'signature';
+	/**
+	 * Set ONLY where `output` is not a fixed length. Falcon is the one such
+	 * scheme here: its signatures are variable-length, so `output` carries the
+	 * PADDED constant the spec tables quote and this records the raw range.
+	 * Every other scheme's output size is exact, leaves this undefined, and
+	 * renders bare — the asymmetry is what tells the two apart.
+	 */
+	outputNote?: string;
 	maturity: Maturity;
 	note: string;
 	brokenYear?: number; // year the scheme was broken, when applicable
@@ -122,6 +130,7 @@ export const FAMILIES: Family[] = [
 				secretKey: 1281,
 				output: 666,
 				outputLabel: 'signature',
+				outputNote: 'padded; raw ~652–657, variable',
 				maturity: 'selected',
 				securityCategory: 1,
 				performance: 'Verification fast; signing dominated by constant-time Gaussian sampling over NTRU lattices.',

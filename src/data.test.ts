@@ -50,6 +50,25 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		expect(s.output).toBe(666);
 	});
 
+	// 666 is the PADDED signature size, not a fixed one: raw compressed Falcon-512
+	// signatures measure about 652–657 B. The figure is legitimate, but printed
+	// bare it reads as exact in a table whose other rows genuinely are. Falcon must
+	// carry the qualifier; every other scheme must NOT, or the marker stops meaning
+	// anything.
+	it('Falcon-512 is the only scheme whose output size is qualified', () => {
+		const falcon = findScheme('Falcon-512');
+		expect(falcon.outputNote).toBeTruthy();
+		expect(falcon.outputNote).toMatch(/padded/i);
+		expect(falcon.outputNote).toMatch(/variable/i);
+
+		for (const f of FAMILIES) {
+			for (const s of f.schemes) {
+				if (s.name === 'Falcon-512') continue;
+				expect(s.outputNote, `${s.name} output size is exact and must not be qualified`).toBeUndefined();
+			}
+		}
+	});
+
 	// FIPS 205, SLH-DSA-128f — tiny key, large signature.
 	it('SLH-DSA-128f (SPHINCS+)', () => {
 		const s = findScheme('SLH-DSA-128f (SPHINCS+)');
