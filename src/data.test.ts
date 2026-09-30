@@ -51,7 +51,11 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 	});
 
 	// 666 is the PADDED signature size, not a fixed one: raw compressed Falcon-512
-	// signatures measure about 652–657 B. The figure is legitimate, but printed
+	// signatures are a distribution: 647–664 B observed over 20,000 signatures
+	// with @noble/post-quantum 0.7.1 (40 keys × 500), never once reaching 666.
+	// Those extremes widened from 648–663 at 4,000 samples, so the range is an
+	// observation with a sample size attached, not a bound. The figure is
+	// legitimate, but printed
 	// bare it reads as exact in a table whose other rows genuinely are. Falcon must
 	// carry the qualifier; every other scheme must NOT, or the marker stops meaning
 	// anything.
@@ -60,6 +64,10 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		expect(falcon.outputNote).toBeTruthy();
 		expect(falcon.outputNote).toMatch(/padded/i);
 		expect(falcon.outputNote).toMatch(/variable/i);
+		// The sample size travels with the figure: a range with no N behind it is
+		// the shape that produced the wrong 652-657 in the first place.
+		expect(falcon.outputNote).toMatch(/20,000 signatures/);
+		expect(falcon.outputNote).toMatch(/647–664/);
 
 		for (const f of FAMILIES) {
 			for (const s of f.schemes) {

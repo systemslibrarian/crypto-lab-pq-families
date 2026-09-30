@@ -137,7 +137,7 @@ export const FAMILIES: Family[] = [
 				secretKey: 1281,
 				output: 666,
 				outputLabel: 'signature',
-				outputNote: 'padded; raw ~652–657, variable',
+				outputNote: 'padded; raw is variable and ran 647–664 B over 20,000 signatures (@noble/post-quantum 0.7.1), never reaching 666',
 				maturity: 'selected',
 				securityCategory: 1,
 				performance: 'Verification fast; signing dominated by constant-time Gaussian sampling over NTRU lattices.',
