@@ -43,7 +43,7 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		expect(s.output).toBe(3309); // signature
 	});
 
-	// Falcon-512 (FN-DSA draft) — stable reference sizes.
+	// Falcon-512 (FN-DSA, FIPS 206 in development) — stable reference sizes.
 	it('Falcon-512', () => {
 		const s = findScheme('Falcon-512');
 		expect(s.pubKey).toBe(897);
