@@ -298,7 +298,7 @@ export const FAMILIES: Family[] = [
 			},
 			{
 				year: 2026,
-				name: 'Weis / GIJS structural attack on Classic McEliece',
+				name: 'Weis / GIJS (Ghoshal-Ishai-Jain-Sun) structural attack on Classic McEliece',
 				venue: 'ePrint 2026/1984 (preprint; revised September 25)',
 				summary: 'Estimated key recovery: 2^94–2^102 bit operations without memory costs, or 2^110–2^128 with the paper’s memory accounting, across five candidate sets. Heuristic assumptions; completed recovery on a toy key only, not a production break.',
 			},
@@ -341,6 +341,13 @@ export const FAMILIES: Family[] = [
 				title: 'Improving GIJS Key Recovery for Classic McEliece (preprint)',
 				venue: 'IACR ePrint 2026/1984; revised September 25, 2026',
 				url: 'https://eprint.iacr.org/2026/1984',
+			},
+			{
+				authors: 'Ashrujit Ghoshal, Yuval Ishai, Aayush Jain, Nuozhou Sun',
+				year: 2026,
+				title: 'Quasipolynomial Cryptanalysis of the McEliece Cryptosystem (preprint)',
+				venue: 'IACR ePrint 2026/1630; revised August 27, 2026',
+				url: 'https://eprint.iacr.org/2026/1630',
 			},
 		],
 	},
