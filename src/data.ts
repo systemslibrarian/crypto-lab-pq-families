@@ -223,6 +223,7 @@ export const FAMILIES: Family[] = [
 		],
 		weaknesses: [
 			'Classic McEliece public keys are hundreds of kilobytes to over a megabyte',
+			'BSI (October 1, 2026) advises against Classic McEliece for new developments or planned applications; no practical attack on its recommended parameter sets is currently established',
 			'2026 preprint estimates structural key recovery below generic ISD costs for Classic McEliece under heuristic and memory-model assumptions',
 			'HQC and BIKE are younger and less battle-tested than McEliece',
 			'Side-channel surface (timing in decoding) is comparatively under-studied',
@@ -304,6 +305,7 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		references: [
+			{ authors: 'BSI', year: 2026, title: 'Classic McEliece deployment guidance (October 1): avoid new applications; not an ISO withdrawal', url: 'https://www.bsi.bund.de/DE/Service-Navi/Presse/Alle-Meldungen-News/Meldungen/2026/Classic-McEliece_261001.html' },
 			{
 				authors: 'McEliece',
 				year: 1978,
