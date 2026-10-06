@@ -300,8 +300,8 @@ export const FAMILIES: Family[] = [
 			{
 				year: 2026,
 				name: 'Weis / GIJS (Ghoshal-Ishai-Jain-Sun) structural attack on Classic McEliece',
-				venue: 'ePrint 2026/1984 (preprint; revised September 25)',
-				summary: 'Estimated key recovery: 2^94–2^102 bit operations without memory costs, or 2^110–2^128 with the paper’s memory accounting, across five candidate sets. Heuristic assumptions; completed recovery on a toy key only, not a production break.',
+				venue: 'ePrint 2026/1984 (preprint; version 0.5; revised October 6)',
+				summary: 'Per-run estimates across five candidate sets: 2^89–2^98 bit operations without memory charges, 2^107–2^117 with square-root charges for addressed memory, or 2^117–2^128 with the Classic McEliece security guide’s whole-memory accounting. One recovery method needs 100–1,400 runs; the GIJS-based method needs one run. Four heuristic assumptions at production scale; completed recovery on a toy key only, not a practical production break.',
 			},
 		],
 		references: [
@@ -341,7 +341,7 @@ export const FAMILIES: Family[] = [
 				authors: 'Stephen A. Weis',
 				year: 2026,
 				title: 'Improving GIJS Key Recovery for Classic McEliece (preprint)',
-				venue: 'IACR ePrint 2026/1984; revised September 25, 2026',
+				venue: 'IACR ePrint 2026/1984; version 0.5; revised October 6, 2026',
 				url: 'https://eprint.iacr.org/2026/1984',
 			},
 			{

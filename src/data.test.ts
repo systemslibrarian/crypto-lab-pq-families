@@ -119,6 +119,10 @@ it('describes the structural McEliece estimate as a preprint with only a toy rec
 	const attack = code.attacks.find((a) => a.name.includes('Weis'))!;
 	expect(attack.venue).toContain('preprint');
 	expect(attack.summary).toContain('toy key only');
+	expect(attack.venue).toContain('October 6');
+	for (const label of ['Per-run', '2^89–2^98', '2^107–2^117', '2^117–2^128', 'without memory charges', 'addressed memory', 'whole-memory accounting', '100–1,400 runs', 'one run', 'Four heuristic assumptions', 'not a practical production break']) {
+		expect(attack.summary).toContain(label);
+	}
 	expect(code.references.find((r) => r.url === 'https://eprint.iacr.org/2026/1984')).toBeDefined();
 	expect(TIMELINE.find((e) => e.title.includes('Structural estimates'))?.kind).toBe('milestone');
 	expect(findScheme('Classic McEliece 348864').maturity).toBe('research');
