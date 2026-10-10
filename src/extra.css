@@ -786,12 +786,11 @@
 
 /* hero actions (copy-link + theme toggle) */
 .hero-actions {
-  position: absolute;
-  top: 18px;
-  right: 18px;
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  margin-top: 16px;
 }
 
 .copy-link {
@@ -2103,7 +2102,7 @@ html[data-audience='executive'] .lab-section[data-audience~='executive']::before
 
 .lamport-stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
   gap: 10px;
   margin-top: 18px;
 }
