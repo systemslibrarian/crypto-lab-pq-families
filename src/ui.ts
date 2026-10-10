@@ -189,14 +189,14 @@ function securityChip(cat?: SecurityCategory): string {
 function renderHero(): HTMLElement {
 	const hero = el('header', 'cl-hero');
 	hero.innerHTML = `
-    <div class="hero-actions">
-      <button id="copy-link" class="copy-link" type="button" aria-label="Copy link to this view"><span aria-hidden="true">\u{1F517}</span> Copy link</button>
-      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">\u{1F319}</button>
-    </div>
     <div class="cl-hero-main">
       <h1 class="cl-hero-title">PQ Families</h1>
       <p class="cl-hero-sub">Lattice \u00b7 Code \u00b7 Hash \u00b7 Multivariate \u00b7 Isogeny \u00b7 NIST PQC</p>
       <p class="cl-hero-desc">Compare the five post-quantum families side by side \u2014 their hard problems, key and signature sizes, NIST status, and the tradeoffs that decided which won standardisation.</p>
+      <div class="hero-actions">
+        <button id="copy-link" class="copy-link" type="button" aria-label="Copy link to this view"><span aria-hidden="true">\u{1F517}</span> Copy link</button>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">\u{1F319}</button>
+      </div>
     </div>
     <aside class="cl-hero-why" aria-label="Why it matters">
       <span class="cl-hero-why-label">WHY IT MATTERS</span>

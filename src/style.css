@@ -320,12 +320,11 @@ button {
 }
 
 /* cl-hero: map fleet-standard tokens to this demo's theme vars + local chrome */
-.cl-hero{--text-dim:var(--ink-soft);--border:var(--line);position:relative;padding-top:3.5rem;}
+.cl-hero{--text-dim:var(--ink-soft);--border:var(--line);}
 .cl-hero-title{color:var(--ink-strong);}
 .cl-hero-sub{color:var(--ink-soft);}
 .cl-hero-why-label{color:var(--accent-ink);}
 .cl-hero-why-text{color:var(--ink);}
-@media (min-width:1025px){.cl-hero{padding-top:0;}.cl-hero-main{padding-right:3rem;}}
 
 .lab-section {
   margin-top: 26px;
