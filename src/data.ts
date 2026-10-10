@@ -627,15 +627,15 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		mathProblem:
-			'Let E_1, E_2 be supersingular elliptic curves over F_{p^2} of equal order. The supersingular isogeny problem asks for an isogeny \u03c6: E_1 \u2192 E_2 of a specified degree.\n\nSIDH/SIKE relied on a *stronger* problem: recover \u03c6 given E_1, E_2 AND the images \u03c6(P), \u03c6(Q) on a torsion basis (P, Q) of E_1. Those auxiliary torsion images were exactly what Castryck\u2013Decru exploited via Kani\u2019s theorem on isogenies of products of abelian surfaces.',
+			'Let E_1, E_2 be supersingular elliptic curves over F_{p^2} of equal order. The plain supersingular isogeny problem asks to construct an isogeny \u03c6: E_1 \u2192 E_2, for example as a path of small-degree isogenies. Prescribing a particular degree is an additional restriction.\n\nSIDH/SIKE used a structured variant: recover \u03c6 given E_1, E_2 AND the images \u03c6(P), \u03c6(Q) on a torsion basis (P, Q) of E_1. Those auxiliary torsion images were exactly what Castryck\u2013Decru exploited via Kani\u2019s theorem on isogenies of products of abelian surfaces.',
 		reductionNote:
-			'Best known classical algorithms for the *plain* supersingular isogeny problem are sub-exponential (Delfs\u2013Galbraith / van Oorschot\u2013Wiener style meet-in-the-middle). Quantum attacks (Childs\u2013Jao\u2013Soukharev for class-group action variants; Kuperberg\u2019s collimation algorithm for CSIDH) are also sub-exponential \u2014 much slower than Shor on RSA but not polynomial.',
+			'Delfs–Galbraith describes classical full-graph meet-in-the-middle at Õ(p^(1/2)) and a special F_p case at Õ(p^(1/4)). With n = log₂(p), these are Õ(2^(n/2)) and Õ(2^(n/4)): exponential in input bit length, not subexponential. The p^(1/4) bound must not be applied to arbitrary supersingular F_(p²) endpoints.\n\nSeparately, Childs–Jao–Soukharev gives a GRH-conditioned subexponential quantum algorithm for ordinary horizontally isogenous curves using a class-group action/hidden-shift reduction. Commutative class-group variants such as CSIDH are distinct from unrestricted supersingular path finding; their bounds do not transfer automatically. These are the cited papers’ scopes, not a survey of every current algorithm.',
 		attacks: [
 			{
 				year: 2016,
-				name: 'Delfs\u2013Galbraith claw-finding',
+				name: 'Delfs\u2013Galbraith supersingular path finding',
 				venue: 'Designs, Codes and Cryptography 78 (2016)',
-				summary: 'Meet-in-the-middle on the isogeny graph \u2014 the dominant classical attack on the plain supersingular isogeny problem. Circulated as ePrint 2013/506 and often cited by that year; the peer-reviewed version is the 2016 journal article.',
+				summary: 'The cited paper distinguishes full-graph search Õ(p^(1/2)) from its special F_p algorithm Õ(p^(1/4)); both are exponential in log₂(p). Circulated as ePrint 2013/506; the peer-reviewed version is the 2016 journal article. No current-best-algorithm survey is claimed.',
 			},
 			{
 				year: 2016,
@@ -657,6 +657,20 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		references: [
+			{
+				authors: 'Delfs, Galbraith',
+				year: 2016,
+				title: 'Computing isogenies between supersingular elliptic curves over F_p',
+				venue: 'Designs, Codes and Cryptography 78 (2016); preprint 2013',
+				url: 'https://arxiv.org/abs/1310.7789v1',
+			},
+			{
+				authors: 'Childs, Jao, Soukharev',
+				year: 2014,
+				title: 'Constructing elliptic curve isogenies in quantum subexponential time',
+				venue: 'Journal of Mathematical Cryptology 8(1)',
+				url: 'https://arxiv.org/abs/1012.4019v3',
+			},
 			{
 				authors: 'Jao, De Feo',
 				year: 2011,
