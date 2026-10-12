@@ -624,3 +624,11 @@ button {
     scroll-behavior: auto !important;
   }
 }
+
+/* Keep the comparison inside the context pane at phone widths. */
+.quantum-resources a { color: inherit; text-decoration: underline; }
+.resource-table { min-width: 32rem; table-layout: fixed; }
+.resource-table th, .resource-table td { overflow-wrap: anywhere; }
+.resource-table caption { padding: 1rem; text-align: left; font-weight: 600; }
+.quantum-resources h3 { margin-top: 0; }
+.quantum-resources .table-shell + p { margin-top: 1rem; }
