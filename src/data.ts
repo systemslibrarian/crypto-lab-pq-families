@@ -632,6 +632,12 @@ export const FAMILIES: Family[] = [
 			'Delfs–Galbraith describes classical full-graph meet-in-the-middle at Õ(p^(1/2)) and a special F_p case at Õ(p^(1/4)). With n = log₂(p), these are Õ(2^(n/2)) and Õ(2^(n/4)): exponential in input bit length, not subexponential. The p^(1/4) bound must not be applied to arbitrary supersingular F_(p²) endpoints.\n\nSeparately, Childs–Jao–Soukharev gives a GRH-conditioned subexponential quantum algorithm for ordinary horizontally isogenous curves using a class-group action/hidden-shift reduction. Commutative class-group variants such as CSIDH are distinct from unrestricted supersingular path finding; their bounds do not transfer automatically. These are the cited papers’ scopes, not a survey of every current algorithm.',
 		attacks: [
 			{
+				year: 2026,
+				name: 'SQIsign signing leakage and ideal reconstruction',
+				venue: 'ePrint 2026/2508; preprint, published 17 October 2026 (received 16 October)',
+				summary: 'Kim et al. report key recovery from leaked intermediate values in Round-3 SQIsign signing, including partial leakage. This attack-model-conditional result concerns implementation leakage, not a public-key-only mathematical break of SQIsign or a break of CSIDH. This lab does not implement SQIsign or reproduce the reported power analysis.',
+			},
+			{
 				year: 2016,
 				name: 'Delfs\u2013Galbraith supersingular path finding',
 				venue: 'Designs, Codes and Cryptography 78 (2016)',
@@ -657,6 +663,13 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		references: [
+			{
+				authors: 'Won Kim, Jaeho Jeon, JeongHwan Lee, Suseong Lee, Young-Sik Kim, Changmin Lee',
+				year: 2026,
+				title: 'Power Analysis on SQIsign via Ideal Reconstruction from Quaternion Leakages',
+				venue: 'ePrint 2026/2508; preprint, published 17 October 2026 (received 16 October)',
+				url: 'https://eprint.iacr.org/2026/2508',
+			},
 			{
 				authors: 'Delfs, Galbraith',
 				year: 2016,
