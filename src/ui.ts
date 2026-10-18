@@ -334,7 +334,7 @@ function renderExplorer(): HTMLElement {
 		const attacksHtmlPanel = `
       <div class="panel-card">
         <h3>Notable cryptanalysis</h3>
-        <p class="panel-copy">Dates are the year of the first peer-reviewed publication venue \u2014 not the ePrint/arXiv year and not the year a result was first announced. Where those differ (they often do by one to three years) the entry says so. Implementation-flaw disclosures with no venue are dated by disclosure and labelled.</p>
+        <p class="panel-copy">Dates are the year of the first peer-reviewed publication venue \u2014 not the ePrint/arXiv year and not the year a result was first announced. Where those differ (they often do by one to three years) the entry says so. Implementation-flaw disclosures with no venue are dated by disclosure and labelled. Research revisions are identified by their revision date.</p>
         <ol class="attack-list">${attacksHtml}</ol>
       </div>
     `;
