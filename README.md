@@ -20,6 +20,10 @@ Select any of the five families to see its hard problem, strengths and weaknesse
 
 **Deployment guidance (October 1, 2026):** [BSI](https://www.bsi.bund.de/DE/Service-Navi/Presse/Alle-Meldungen-News/Meldungen/2026/Classic-McEliece_261001.html) advises against using Classic McEliece in new developments or when planning new cryptographic applications. BSI states that its recommended parameter sets are not currently subject to a practical attack. This is deployment guidance following structural cryptanalysis, not an ISO withdrawal or a change to NIST’s 2025 decision. Earlier TR-02102-1 recommendations were limited to hybrid use.
 
+## Research note — 16 October 2026 revision
+
+[Zhang, Zhou and Qu, ePrint 2026/607](https://eprint.iacr.org/2026/607), a revision of TCHES 2026 research, correct and refine MSIS security estimates for Dilithium. They report costs 3.65–6.09 bits below their conservative Core-SVP baseline. This is model-dependent extrapolation supported by lattice experiments, not demonstrated production-key recovery. The visible lattice attacks and references include this note. FIPS 204 categories remain unchanged; the reported difference must not be subtracted from unrelated estimates. This lab does not execute the research attack.
+
 ## What Can Go Wrong
 
 - **Mathematical hardness does not prevent implementation leakage.** [Kim et al., *Power Analysis on SQIsign via Ideal Reconstruction from Quaternion Leakages* (ePrint 2026/2508)](https://eprint.iacr.org/2026/2508), received 16 October and published 17 October 2026, is a **preprint** reporting key recovery from leaked intermediate values in Round-3 SQIsign signing, including partial leakage. The result is **attack-model-conditional**: it does not establish a public-key-only mathematical break of SQIsign or a break of CSIDH. This lab does not implement SQIsign or reproduce the reported power analysis.

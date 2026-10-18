@@ -151,6 +151,12 @@ export const FAMILIES: Family[] = [
 			'Module-LWE admits a worst-case → average-case reduction from approximate shortest-vector problems (GapSVP, SIVP) on module lattices (Langlois–Stehlé, Albrecht et al.). Adopting *module* structure trades a stronger assumption for substantially better efficiency than plain LWE.',
 		attacks: [
 			{
+				year: 2026,
+				name: 'Refined MSIS security estimates (revision 16 October 2026)',
+				venue: 'ePrint 2026/607; revision of TCHES 2026 research',
+				summary: 'Zhang, Zhou and Qu refine lattice-reduction cost estimates for Dilithium, reporting 3.65–6.09 bits below their conservative Core-SVP baseline. This is model-dependent extrapolation supported by lattice experiments, not demonstrated production-key recovery. It does not revise FIPS 204 categories, and the difference must not be subtracted from unrelated historical estimates.',
+			},
+			{
 				year: 1982,
 				name: 'LLL basis reduction (Lenstra–Lenstra–Lovász)',
 				summary: 'Polynomial-time reduction yielding short-ish lattice vectors. Foundation under every modern lattice attack.',
@@ -174,6 +180,13 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		references: [
+			{
+				authors: 'Zhang, Zhou, Qu',
+				year: 2026,
+				title: 'Refined Approx-SVP Rank Reduction Conditions and Adaptive Lattice Reduction for MSIS Security Estimation (revision 16 October 2026)',
+				venue: 'ePrint 2026/607; revision of TCHES 2026 research',
+				url: 'https://eprint.iacr.org/2026/607',
+			},
 			{
 				authors: 'Regev',
 				year: 2005,
