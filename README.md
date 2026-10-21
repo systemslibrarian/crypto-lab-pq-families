@@ -26,6 +26,9 @@ Select any of the five families to see its hard problem, strengths and weaknesse
 
 ## What Can Go Wrong
 
+
+- **Deterministic-CSIDH fault research — 20 October 2026.** Deterministic execution can make the same secret-dependent step easier to target repeatedly. Banegas, Dimitrova and Trimoska study fault attacks on deterministic CSIDH variants and OSIDH-LD. They recover full OSIDH-LD keys in software fault simulation and separately demonstrate a targeted instruction skip on ChipWhisperer-Lite hardware. This is not complete hardware key recovery or a public-key-only mathematical break of CSIDH. The result requires targeted fault injection and output observations; it is distinct from the SIDH/SIKE mathematical break. [Banegas, Dimitrova and Trimoska, *From if to Oops: Turning a conditional into a key-recovery oracle*, ePrint 2026/2542](https://eprint.iacr.org/2026/2542), received 19 October and approved 20 October 2026. **Preprint; attack-model-conditional.** This lab does not implement the attacked variants or reproduce the fault experiment.
+
 - **Mathematical hardness does not prevent implementation leakage.** [Kim et al., *Power Analysis on SQIsign via Ideal Reconstruction from Quaternion Leakages* (ePrint 2026/2508)](https://eprint.iacr.org/2026/2508), received 16 October and published 17 October 2026, is a **preprint** reporting key recovery from leaked intermediate values in Round-3 SQIsign signing, including partial leakage. The result is **attack-model-conditional**: it does not establish a public-key-only mathematical break of SQIsign or a break of CSIDH. This lab does not implement SQIsign or reproduce the reported power analysis.
 - **Confusing implementation leakage with a broken lattice assumption** — [Zhou et al. (ePrint 2026/2124, September 22, 2026)](https://eprint.iacr.org/2026/2124) report Falcon power-trace key recovery on PQClean/ARM Cortex-M4; [Jahandideh (ePrint 2026/2137, September 22, 2026)](https://eprint.iacr.org/2026/2137) studies one-trace ML-KEM key-generation leakage on optimized Cortex-M4. These target-specific results do not change FIPS 203's final status or show a generic mathematical break.
 - **Treating "post-quantum" as permanent** — Rainbow (multivariate) and SIKE (isogeny) were both broken in 2022; selecting a family on reputation alone is risky, which is why NIST standardised a diverse portfolio.
@@ -102,3 +105,4 @@ its binomial ratio implies, and the parallel basis is reported as not a lattice.
 *Part of the [Crypto Lab](https://crypto-lab.systemslibrarian.dev/) suite.*
 
 *"So whether you eat or drink or whatever you do, do it all for the glory of God." — 1 Corinthians 10:31*
+

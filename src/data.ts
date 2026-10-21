@@ -646,6 +646,12 @@ export const FAMILIES: Family[] = [
 		attacks: [
 			{
 				year: 2026,
+				name: 'Targeted faults in deterministic CSIDH variants',
+				venue: 'ePrint 2026/2542; preprint, approved 20 October 2026 (received 19 October)',
+				summary: 'Deterministic execution can make the same secret-dependent step easier to target repeatedly. Banegas, Dimitrova and Trimoska study fault attacks on deterministic CSIDH variants and OSIDH-LD. They recover full OSIDH-LD keys in software fault simulation and separately demonstrate a targeted instruction skip on ChipWhisperer-Lite hardware. This is not complete hardware key recovery or a public-key-only mathematical break of CSIDH. The result requires targeted fault injection and output observations; it is distinct from the SIDH/SIKE mathematical break. This lab does not implement the attacked variants or reproduce the fault experiment.',
+			},
+			{
+				year: 2026,
 				name: 'SQIsign signing leakage and ideal reconstruction',
 				venue: 'ePrint 2026/2508; preprint, published 17 October 2026 (received 16 October)',
 				summary: 'Kim et al. report key recovery from leaked intermediate values in Round-3 SQIsign signing, including partial leakage. This attack-model-conditional result concerns implementation leakage, not a public-key-only mathematical break of SQIsign or a break of CSIDH. This lab does not implement SQIsign or reproduce the reported power analysis.',
@@ -676,6 +682,13 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		references: [
+			{
+				authors: 'Gustavo Banegas, Nia Dimitrova, Monika Trimoska',
+				year: 2026,
+				title: 'From if to Oops: Turning a conditional into a key-recovery oracle',
+				venue: 'ePrint 2026/2542; preprint, approved 20 October 2026 (received 19 October)',
+				url: 'https://eprint.iacr.org/2026/2542',
+			},
 			{
 				authors: 'Won Kim, Jaeho Jeon, JeongHwan Lee, Suseong Lee, Young-Sik Kim, Changmin Lee',
 				year: 2026,
@@ -956,3 +969,4 @@ export const GLOSSARY: GlossaryEntry[] = [
 		def: 'NIST’s post-quantum standardisation ran four rounds (2016–2024). FIPS 203 = ML-KEM (Kyber). FIPS 204 = ML-DSA (Dilithium). FIPS 205 = SLH-DSA (SPHINCS+). Falcon is being standardised as FIPS 206 / FN-DSA; HQC was selected in 2025; additional signatures are being evaluated in an on-ramp.',
 	},
 ];
+
