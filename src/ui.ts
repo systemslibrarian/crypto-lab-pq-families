@@ -201,7 +201,7 @@ function renderHero(): HTMLElement {
     </div>
     <aside class="cl-hero-why" aria-label="Why it matters">
       <span class="cl-hero-why-label">WHY IT MATTERS</span>
-      <p class="cl-hero-why-text">Shor\u2019s algorithm on a large quantum computer breaks RSA and elliptic curves outright. NIST hedges with a portfolio of quantum-hard families \u2014 but two have already fallen, so \u201Cpost-quantum\u201D is a moving target.</p>
+      <p class="cl-hero-why-text">Shor\u2019s algorithm on a large quantum computer breaks RSA and elliptic curves outright. NIST hedges with several post-quantum approaches. Rainbow and SIKE were broken, while other schemes in their families remain under study.</p>
     </aside>
   `;
 	return hero;
@@ -217,7 +217,7 @@ function renderExplorer(): HTMLElement {
       <div>
         <p class="section-kicker">Explore</p>
         <h2 id="playground-heading">The Five Families</h2>
-        <p class="section-footnote">Select a family to see its hard problem, tradeoffs, and representative schemes. <span class="kbd-tip">Tip: press <kbd>1</kbd>\u2013<kbd>5</kbd> to jump between families.</span></p>
+        <p class="section-footnote">Select a family to see its hard problem, tradeoffs, and representative schemes. The family status describes the most advanced scheme shown, not every scheme in that family. <span class="kbd-tip">Tip: press <kbd>1</kbd>\u2013<kbd>5</kbd> to jump between families.</span></p>
       </div>
     </div>
     <div class="family-tabs" role="tablist" aria-label="PQC families"></div>
@@ -383,9 +383,10 @@ function renderExplorer(): HTMLElement {
 			if (fill) fill.style.width = `${family.confidence}%`;
 		});
 
-		if (family.maturity === 'broken') {
+		const brokenSchemes = family.schemes.filter((s) => s.maturity === 'broken');
+		if (brokenSchemes.length > 0) {
 			banner.hidden = false;
-			bannerText.textContent = `${family.name} includes a flagship scheme that has been broken in practice. Shown here for educational and historical value \u2014 do not deploy.`;
+			bannerText.textContent = `${brokenSchemes.map((s) => s.name).join(' and ')} ${brokenSchemes.length === 1 ? 'was' : 'were'} broken in practice. ${family.name} research continues; do not deploy the broken scheme${brokenSchemes.length === 1 ? '' : 's'}.`;
 		} else {
 			banner.hidden = true;
 		}
@@ -814,7 +815,7 @@ function renderHandshakeCalculator(): HTMLElement {
 			.map((s) => {
 				const pct = (s.bytes / scaleMax) * 100;
 				const wideEnough = pct > 6;
-				return `<div class="hs-seg hs-seg--${s.cls}" style="width:0%" data-target="${pct.toFixed(3)}" title="${s.label}: ${formatBytes(s.bytes)}">${wideEnough ? `<span class="hs-seg-label">${s.label}</span>` : ''}</div>`;
+				return `<div class="hs-seg hs-seg--${s.cls}" style="width:0%" data-target="${pct.toFixed(3)}" title="${s.label}: ${s.bytes.toLocaleString()} B">${wideEnough ? `<span class="hs-seg-label">${s.label}</span>` : ''}</div>`;
 			})
 			.join('');
 
@@ -847,7 +848,7 @@ function renderHandshakeCalculator(): HTMLElement {
           <span class="hs-label-detail">${kem.name} + ${sig.name}${state.hybrid ? ' + X25519/ECDSA' : ''}</span>
         </div>
         <div class="hs-track">${pqcSegMarkup}</div>
-        <span class="mono-inline hs-total">${formatBytes(pqcTotal)}</span>
+        <span class="mono-inline hs-total" title="Exact sum: ${pqcTotal.toLocaleString()} B">${formatBytes(pqcTotal)}</span>
       </div>
       <div class="hs-row hs-row--classical">
         <div class="hs-label">
@@ -2415,7 +2416,7 @@ function renderGlossary(): HTMLElement {
 
 function renderFooter(): HTMLElement {
 	const footer = el('footer', 'lab-section');
-	const reviewed = '2026-06';
+	const reviewed = '2026-10';
 	footer.innerHTML = `
     <div class="footer-meta">
       <div class="footer-meta-item">
@@ -2424,7 +2425,7 @@ function renderFooter(): HTMLElement {
       </div>
       <div class="footer-meta-item">
         <p class="hero-metric-label">Data provenance</p>
-        <p class="panel-copy">Parameter sizes drawn from NIST FIPS 203 / 204 / 205, Falcon submission, and PQC round-4 specs. Cycle counts approximate Skylake reference-implementation numbers from SUPERCOP / eBATS. Implementation-status snapshot from each library's published changelog.</p>
+        <p class="panel-copy">Parameter sizes drawn from NIST FIPS 203 / 204 / 205, the October 12, 2026 HQC specification, Falcon submission, and PQC round-4 specs. HQC cycles are from its 2026 optimized AVX2 benchmark on i7-11850H; other cycle counts are approximate reference-implementation figures. Implementation-status snapshot from each library's published changelog.</p>
       </div>
       <div class="footer-meta-item">
         <p class="hero-metric-label">Status</p>
@@ -2802,7 +2803,7 @@ function renderRemember(): HTMLElement {
         <span class="remember-num">2</span>
         <div class="remember-body">
           <p class="remember-title">Code- and hash-based families are the diversity hedge.</p>
-          <p class="panel-copy">HQC (FIPS, selected 2025) and SLH-DSA / SPHINCS+ (FIPS 205) exist precisely so a future cryptanalytic advance against lattices wouldn't take the whole portfolio with it.</p>
+          <p class="panel-copy">HQC (NIST-selected 2025; FIPS forthcoming) and SLH-DSA / SPHINCS+ (FIPS 205) offer algorithmic diversity if a future cryptanalytic advance weakens lattice-based schemes.</p>
         </div>
       </li>
       <li class="remember-item">

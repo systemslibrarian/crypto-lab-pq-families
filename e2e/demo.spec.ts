@@ -17,6 +17,29 @@ async function gotoLab(page: Page): Promise<void> {
   await expect(page.locator('#app')).toBeVisible();
 }
 
+test('the family statuses and HQC wire sizes match the visible scheme details', async ({ page }) => {
+  await gotoLab(page);
+  await page.locator('#family-tab-code').click();
+  await expect(page.locator('#family-detail .family-name')).toContainText('Selected');
+  const hqc = page.locator('#family-detail .panel-card--scheme[data-scheme="HQC-128"]');
+  await expect(hqc).toContainText('2,241 B encapsulation key, 32 B compressed decapsulation key');
+  await expect(hqc).toContainText('4,433 B ciphertext');
+  await page.locator('.subview-tab[data-view="sources"]').click();
+  await expect(page.locator('.ref-item a[href="https://pqc-hqc.org/doc/hqc_specifications_2026_10_12.pdf"]')).toBeVisible();
+
+  await page.locator('#family-tab-multivariate').click();
+  await expect(page.locator('#family-detail .family-name')).toContainText('Research');
+  await expect(page.locator('#broken-banner-text')).toContainText('Rainbow (Ia) was broken');
+  await page.locator('#family-tab-isogeny').click();
+  await expect(page.locator('#family-detail .family-name')).toContainText('Research');
+  await expect(page.locator('#broken-banner-text')).toContainText('SIKEp434 was broken');
+
+  await page.locator('.hs-chip[data-group="kem"][data-name="HQC-128"]').click();
+  await expect(page.locator('.hs-row--pqc .hs-seg--kempk')).toHaveAttribute('title', 'KEM pk: 2,241 B');
+  await expect(page.locator('.hs-row--pqc .hs-seg--kemct')).toHaveAttribute('title', 'KEM ct: 4,433 B');
+  await expect(page.locator('.hs-row--pqc .hs-total')).toHaveAttribute('title', 'Exact sum: 15,244 B');
+});
+
 test.describe('Lamport one-time signature', () => {
   test('a real signature verifies and a tampered message does not', async ({ page }) => {
     await gotoLab(page);

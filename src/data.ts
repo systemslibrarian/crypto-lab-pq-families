@@ -1,6 +1,7 @@
 // data.ts — Post-Quantum Cryptography family comparison corpus.
-// Figures reflect NIST PQC standardisation as of 2024–2025 (FIPS 203/204/205 + HQC selection).
-// Sizes are representative parameter sets, in bytes, rounded to public figures.
+// Status reflects published FIPS 203/204/205, HQC selection, and additional-signature Round 3;
+// HQC sizes use the October 12, 2026 HQC team specification, not a draft FIPS 207.
+// Sizes describe representative parameter sets in exact bytes where the cited specification provides them.
 
 export type Maturity = 'standardized' | 'selected' | 'research' | 'broken';
 
@@ -225,10 +226,10 @@ export const FAMILIES: Family[] = [
 		name: 'Code-based',
 		hardProblem: 'Syndrome decoding of linear codes',
 		basis: 'Decoding a random-looking linear error-correcting code',
-		maturity: 'standardized',
+		maturity: 'selected',
 		confidence: 80,
 		summary:
-			'The oldest post-quantum family, dating to McEliece in 1978. No production-size Classic McEliece key recovery has been demonstrated, but a 2026 preprint estimates a cheaper structural attack under stated heuristics. Its public keys are enormous. NIST selected HQC in 2025 as a code-based KEM backup to lattice-based ML-KEM.',
+			'The oldest post-quantum family, dating to McEliece in 1978. No production-size Classic McEliece key recovery has been demonstrated, but a 2026 preprint estimates a cheaper structural attack under stated heuristics. Its public keys are enormous. NIST selected HQC in 2025 as a code-based KEM backup to lattice-based ML-KEM; its FIPS standard is still forthcoming.',
 		strengths: [
 			'Distinct code-based assumption; no practical production-parameter break demonstrated',
 			'Fast encapsulation and decapsulation',
@@ -260,15 +261,15 @@ export const FAMILIES: Family[] = [
 				name: 'HQC-128',
 				standard: 'NIST-selected 2025',
 				kind: 'KEM',
-				pubKey: 2249,
-				secretKey: 2305,
+				pubKey: 2241,
+				secretKey: 32,
 				output: 4433,
 				outputLabel: 'ciphertext',
 				maturity: 'selected',
 				securityCategory: 1,
 				performance: 'Microsecond-class operations; needs constant-time rejection-sampling care.',
-				cyclesNote: 'keygen ≈ 150k · encap ≈ 250k · decap ≈ 450k cycles (ref impl, Skylake)',
-				note: 'Quasi-cyclic codes with provable IND-CCA2 via the Hofheinz–Hövelmanns–Kiltz transform; selected as the code-based KEM standard.',
+				cyclesNote: 'keygen ≈ 75k · encap ≈ 152k · decap ≈ 375k cycles (2026 spec, optimized AVX2 on i7-11850H)',
+				note: 'October 12, 2026 HQC specification, Table 9 (HQC-1): 2,241 B encapsulation key, 32 B compressed decapsulation key (now the default; expansion may be cached), and 4,433 B ciphertext. Selected by NIST; its FIPS standard is still forthcoming.',
 			},
 			{
 				name: 'BIKE L1',
@@ -343,6 +344,18 @@ export const FAMILIES: Family[] = [
 				title: 'Hamming Quasi-Cyclic (HQC)',
 				venue: 'NIST PQC submission',
 				url: 'https://pqc-hqc.org',
+			},
+			{
+				authors: 'HQC team',
+				year: 2026,
+				title: 'Hamming Quasi-Cyclic (HQC) specifications, October 12, Table 9',
+				url: 'https://pqc-hqc.org/doc/hqc_specifications_2026_10_12.pdf',
+			},
+			{
+				authors: 'NIST',
+				year: 2025,
+				title: 'Selected algorithms: HQC (2025), FIPS coming soon',
+				url: 'https://csrc.nist.gov/projects/post-quantum-cryptography/post-quantum-cryptography-standardization/selected-algorithms',
 			},
 			{
 				authors: 'Classic McEliece team',
@@ -485,10 +498,10 @@ export const FAMILIES: Family[] = [
 		name: 'Multivariate',
 		hardProblem: 'Solving systems of multivariate quadratic equations (MQ)',
 		basis: 'The NP-hardness of solving nonlinear equation systems over finite fields',
-		maturity: 'broken',
+		maturity: 'research',
 		confidence: 25,
 		summary:
-			'A historically important family that produces very short signatures, but one whose flagship NIST finalist, Rainbow, was broken in 2022 by Beullens on a laptop over a weekend. It serves as the cautionary tale for why structured-lattice schemes ultimately won standardisation.',
+			'A historically important signature family. Its NIST finalist Rainbow was broken in 2022 by Beullens on a laptop over a weekend; this does not break all multivariate signatures. UOV and other multivariate proposals remain in NIST\u2019s additional-signature Round 3 as research candidates, not final standards.',
 		strengths: [
 			'Very short signatures and fast verification',
 			'Conceptually simple finite-field arithmetic',
@@ -517,7 +530,7 @@ export const FAMILIES: Family[] = [
 			},
 			{
 				name: 'UOV (ov-Ip)',
-				standard: 'On-ramp candidate',
+				standard: 'Additional-signature Round 3 candidate',
 				kind: 'Signature',
 				pubKey: 278432,
 				secretKey: 237912,
@@ -527,7 +540,7 @@ export const FAMILIES: Family[] = [
 				securityCategory: 1,
 				performance: 'Very fast signing and verification; key generation also fast. Bandwidth dominated by the public key.',
 				cyclesNote: 'keygen \u2248 1M \u00b7 sign \u2248 50k \u00b7 verify \u2248 50k cycles (ref impl, Skylake)',
-				note: 'Unbalanced Oil-and-Vinegar (Kipnis\u2013Patarin\u2013Goubin, 1999) \u2014 the surviving multivariate proposal in NIST\u2019s on-ramp signature call.',
+				note: 'Unbalanced Oil-and-Vinegar (Kipnis\u2013Patarin\u2013Goubin, 1999) \u2014 one of several multivariate proposals still in NIST\u2019s additional-signature Round 3.',
 			},
 		],
 		mathProblem:
@@ -587,6 +600,12 @@ export const FAMILIES: Family[] = [
 				title: 'PQC additional digital signatures (on-ramp) call',
 				url: 'https://csrc.nist.gov/Projects/pqc-dig-sig',
 			},
+			{
+				authors: 'NIST',
+				year: 2026,
+				title: 'Round 3 additional signatures: UOV and other multivariate candidates',
+				url: 'https://csrc.nist.gov/projects/pqc-dig-sig/round-3-additional-signatures',
+			},
 		],
 	},
 	{
@@ -594,19 +613,19 @@ export const FAMILIES: Family[] = [
 		name: 'Isogeny-based',
 		hardProblem: 'Finding isogenies between supersingular elliptic curves',
 		basis: 'Walking the isogeny graph between supersingular curves',
-		maturity: 'broken',
+		maturity: 'research',
 		confidence: 20,
 		summary:
-			'Once prized for the smallest keys of any PQC family, the leading scheme SIKE was decisively broken in 2022 by the Castryck\u2013Decru attack, which recovered keys in roughly an hour. Research continues (e.g. CSIDH, SQIsign), but the family no longer has a NIST KEM candidate.',
+			'Once prized for small keys, the leading isogeny KEM SIKE was decisively broken in 2022 by the Castryck\u2013Decru attack, which recovered keys in roughly an hour. That result did not break every isogeny construction: SQIsign remains an additional-signature Round 3 research candidate, while this family has no NIST KEM candidate.',
 		strengths: [
-			'Smallest public keys of any PQC family (hundreds of bytes)',
+			'Compact keys and signatures in some schemes, including SQIsign',
 			'Elegant connection to classical elliptic-curve theory',
 			'SQIsign offers very compact signatures and remains under study',
 		],
 		weaknesses: [
 			'SIKE was broken in 2022 (Castryck\u2013Decru, key recovery in about an hour)',
 			'Slow operations compared with lattice schemes',
-			'No standardised KEM remains; confidence is rebuilding slowly',
+			'No isogeny KEM has been standardised; confidence is rebuilding slowly',
 		],
 		schemes: [
 			{
@@ -626,7 +645,7 @@ export const FAMILIES: Family[] = [
 			},
 			{
 				name: 'SQIsign',
-				standard: 'On-ramp candidate',
+				standard: 'Additional-signature Round 3 candidate',
 				kind: 'Signature',
 				pubKey: 64,
 				secretKey: 16,
@@ -733,6 +752,12 @@ export const FAMILIES: Family[] = [
 				year: 2020,
 				title: 'SQIsign \u2014 compact post-quantum signatures from quaternions and isogenies',
 				url: 'https://sqisign.org',
+			},
+			{
+				authors: 'NIST',
+				year: 2026,
+				title: 'Round 3 additional signatures: SQIsign',
+				url: 'https://csrc.nist.gov/projects/pqc-dig-sig/round-3-additional-signatures',
 			},
 		],
 	},

@@ -106,6 +106,17 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		expect(s.output).toBe(96); // ciphertext
 	});
 
+	// HQC team's October 12, 2026 specification, Table 9. Unlike the 2025
+	// expanded key, the 32-byte seed is now the default decapsulation key.
+	it('HQC-1 uses the 2026 specification and selected status', () => {
+		const s = findScheme('HQC-128');
+		expect(s.maturity).toBe('selected');
+		expect(s.pubKey).toBe(2241);
+		expect(s.secretKey).toBe(32);
+		expect(s.output).toBe(4433);
+		expect(s.note).toMatch(/compressed decapsulation key \(now the default/);
+	});
+
 	// Classical baseline dwarfed by every PQC scheme.
 	it('X25519 + ECDSA P-256 baseline', () => {
 		expect(CLASSICAL_BASELINE.kemPub).toBe(32);
@@ -126,6 +137,20 @@ it('describes the structural McEliece estimate as a preprint with only a toy rec
 	expect(code.references.find((r) => r.url === 'https://eprint.iacr.org/2026/1984')).toBeDefined();
 	expect(TIMELINE.find((e) => e.title.includes('Structural estimates'))?.kind).toBe('milestone');
 	expect(findScheme('Classic McEliece 348864').maturity).toBe('research');
+});
+
+it('keeps family maturity distinct from broken individual schemes', () => {
+	const code = FAMILIES.find((f) => f.id === 'code')!;
+	const multivariate = FAMILIES.find((f) => f.id === 'multivariate')!;
+	const isogeny = FAMILIES.find((f) => f.id === 'isogeny')!;
+	expect(code.maturity).toBe('selected');
+	expect(multivariate.maturity).toBe('research');
+	expect(isogeny.maturity).toBe('research');
+	expect(findScheme('Rainbow (Ia)').maturity).toBe('broken');
+	expect(findScheme('SIKEp434').maturity).toBe('broken');
+	expect(findScheme('UOV (ov-Ip)').maturity).toBe('research');
+	expect(findScheme('SQIsign').maturity).toBe('research');
+	expect(code.references.some((r) => r.url === 'https://pqc-hqc.org/doc/hqc_specifications_2026_10_12.pdf')).toBe(true);
 });
 
 // =====================================================================

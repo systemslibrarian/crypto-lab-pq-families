@@ -798,12 +798,12 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
     await expect(page.locator('#family-detail')).not.toBeEmpty();
     await scanAt(`family = ${fam}`);
   }
-  // Isogeny is a broken family, so the banner that ships hidden is now up.
+  // Isogeny research still includes the broken SIKE scheme, so the banner is now up.
   await expect(page.locator('#broken-banner')).toBeVisible();
   await expect(page.locator('#broken-banner-text')).not.toBeEmpty();
   await scanAt('the broken-family banner, on the family that raises it');
 
-  // Every subview, on a BROKEN family — where the Attacks pane has content the
+  // Every subview, on the isogeny family — where the Attacks pane has content the
   // healthy families do not.
   for (const view of ['math', 'attacks', 'sources'] as const) {
     await page.click(`.subview-tab[data-view="${view}"]`);
