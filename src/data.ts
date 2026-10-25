@@ -387,9 +387,9 @@ export const FAMILIES: Family[] = [
 		maturity: 'standardized',
 		confidence: 90,
 		summary:
-			'Signatures only \u2014 no encryption. Security rests entirely on a well-understood hash function, giving the most conservative security argument of any family. SLH-DSA (SPHINCS+) is stateless and standardised; LMS/XMSS are stateful and faster but require careful state management.',
+			'Signatures only \u2014 no encryption. The mathematical security assumptions are hash-based, without an algebraic hardness assumption. Implementations must also protect secret values against leakage. SLH-DSA (SPHINCS+) is stateless and standardised; LMS/XMSS are stateful and faster but require careful state management.',
 		strengths: [
-			'Minimal assumptions \u2014 only a secure hash is needed',
+			'Conservative mathematical assumptions based on hash-function properties',
 			'Extremely well-understood and quantum-resistant security basis',
 			'Stateless variant (SLH-DSA) avoids catastrophic state-reuse risk',
 		],
@@ -397,6 +397,7 @@ export const FAMILIES: Family[] = [
 			'Signatures only; cannot do key exchange or encryption',
 			'Large signatures (8\u201350 KB) and slow signing for SLH-DSA',
 			'Stateful schemes (LMS/XMSS) fail catastrophically if state is reused',
+			'Hash-based proofs do not establish resistance to implementation leakage, including power analysis',
 		],
 		schemes: [
 			{
@@ -431,7 +432,7 @@ export const FAMILIES: Family[] = [
 		mathProblem:
 			'Let H: {0,1}^* → {0,1}^n be a cryptographic hash function. Hash-based signatures reduce existential unforgeability to one or more of:\n\n  • Preimage resistance: given y = H(x), find x.\n  • Second-preimage resistance: given x, find x′ ≠ x with H(x) = H(x′).\n  • Collision resistance (for some variants): find x ≠ x′ with H(x) = H(x′).\n\nClassical security is ~ 2^n (preimage) and ~ 2^(n/2) (collision). Grover gives quantum preimage at ~ 2^(n/2) and BHT collision at ~ 2^(n/3), motivating n ≥ 256.',
 		reductionNote:
-			'Smallest assumption of any PQC family: tight reductions to plain hash-function properties, with no algebraic structure to hide. The price is signature size and (for the stateless variants) signing time.',
+			'Security proofs rely on hash-function properties rather than algebraic hardness assumptions. These mathematical guarantees do not establish resistance to implementation leakage. The tradeoffs include signature size and (for stateless variants) signing time.',
 		attacks: [
 			{
 				year: 1979,
@@ -452,6 +453,11 @@ export const FAMILIES: Family[] = [
 				year: 2020,
 				name: 'WOTS+ multi-target analysis',
 				summary: 'Tight multi-user / multi-target bounds (Hülsing–Rijneveld–Song) that shaped SPHINCS+ parameter choices.',
+			},
+			{
+				year: 2026,
+				name: 'SLH-DSA-SHAKE power analysis',
+				summary: 'Carrera Rodriguez et al., ePrint 2026/2584 (received 21 October; approved 24 October 2026), preprint; attack-model-conditional. Non-profiled correlation power analysis recovers a full secret seed in SLH-DSA-SHAKE experiments on a 32-bit microcontroller, enabling forgery. The attack requires physical power measurements; it is not a mathematical break of SLH-DSA or SHAKE and does not establish vulnerability of SHA-2 browser implementations. This comparison does not reproduce the experiment.',
 			},
 		],
 		references: [
@@ -490,6 +496,13 @@ export const FAMILIES: Family[] = [
 				year: 2019,
 				title: 'RFC 8554 — Leighton-Micali Hash-Based Signatures (LMS)',
 				url: 'https://datatracker.ietf.org/doc/html/rfc8554',
+			},
+			{
+				authors: 'Carrera Rodriguez, Zahreddine, Monthieu, Vasselle and Liardet',
+				year: 2026,
+				title: 'SHAKEing SLH-DSA with Non-profiled SCAs',
+				venue: 'ePrint 2026/2584; preprint, received 21 October and approved 24 October 2026',
+				url: 'https://eprint.iacr.org/2026/2584',
 			},
 		],
 	},
