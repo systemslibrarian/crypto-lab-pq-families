@@ -195,7 +195,7 @@ function renderHero(): HTMLElement {
       <p class="cl-hero-sub">Lattice \u00b7 Code \u00b7 Hash \u00b7 Multivariate \u00b7 Isogeny \u00b7 NIST PQC</p>
       <p class="cl-hero-desc">Compare the five post-quantum families side by side \u2014 their hard problems, key and signature sizes, NIST status, and the tradeoffs that decided which won standardisation.</p>
       <div class="hero-actions">
-        <button id="copy-link" class="copy-link" type="button" aria-label="Copy link to this view"><span aria-hidden="true">\u{1F517}</span> Copy link</button>
+        <button id="copy-link" class="copy-link" type="button" aria-label="Copy link to this view">Copy link</button>
         <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch theme">\u{1F319}</button>
       </div>
     </div>
@@ -2550,14 +2550,24 @@ function wireCopyLink(shell: HTMLElement): void {
 	button.addEventListener('click', async () => {
 		try {
 			await navigator.clipboard.writeText(window.location.href);
-			button.innerHTML = '<span aria-hidden="true">✓</span> Copied';
+			// The words and the name move together, and the tick is drawn from
+			// CSS. axe 4.14 compares the accessible name against everything a
+			// SIGHTED user sees (label-content-name-mismatch, WCAG 2.5.3) while
+			// excluding aria-hidden content from the NAME, so an aria-hidden
+			// glyph inside the button can never be matched by any label.
+			button.textContent = 'Copied';
+			button.setAttribute('aria-label', 'Copied: the link to this view');
 			button.classList.add('is-copied');
 		} catch {
-			button.innerHTML = '<span aria-hidden="true">!</span> Copy failed';
+			button.textContent = 'Copy failed';
+			button.setAttribute('aria-label', 'Copy failed');
+			button.classList.add('is-failed');
 		}
 		setTimeout(() => {
 			button.innerHTML = original;
+			button.setAttribute('aria-label', 'Copy link to this view');
 			button.classList.remove('is-copied');
+			button.classList.remove('is-failed');
 		}, 1600);
 	});
 }
@@ -2587,7 +2597,7 @@ function renderPinnedDrawer(): HTMLElement {
         <span class="pin-chip">
           <span class="pin-chip-fam">${found.family.name}</span>
           <span class="pin-chip-name">${name}</span>
-          <button type="button" class="pin-chip-x" data-unpin="${name}" aria-label="Unpin ${name}">×</button>
+          <button type="button" class="pin-chip-x" data-unpin="${name}" aria-label="Unpin ${name}"></button>
         </span>`;
 			})
 			.join('');

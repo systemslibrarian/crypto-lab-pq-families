@@ -7,7 +7,7 @@ for (const width of [1440, 1280, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto('./#family=lattice');
     await page.evaluate(() => document.fonts.ready);
-    const copy = page.getByRole('button', { name: 'Copy link to this view' });
+    const copy = page.locator('#copy-link');
     await expect(copy).toBeVisible();
 
     const layout = await copy.evaluate((button) => {
@@ -34,7 +34,7 @@ for (const width of [1440, 1280, 1024, 768, 390, 320]) {
 test('Copy Link keeps the current family deep link and supports keyboard activation', async ({ page, context }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   await page.goto('./#family=lattice');
-  const copy = page.getByRole('button', { name: 'Copy link to this view' });
+  const copy = page.locator('#copy-link');
   await copy.focus();
   await page.keyboard.press('Enter');
   await expect(copy).toContainText('Copied');
@@ -54,7 +54,7 @@ test('clipboard denial shows failure and restores the usable control', async ({ 
       value: async () => { throw new DOMException('Clipboard denied', 'NotAllowedError'); },
     });
   });
-  const copy = page.getByRole('button', { name: 'Copy link to this view' });
+  const copy = page.locator('#copy-link');
   await copy.click();
   await expect(copy).toContainText('Copy failed');
   await expect(copy).not.toHaveClass(/is-copied/);

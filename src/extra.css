@@ -1475,6 +1475,14 @@
   font-weight: 700;
 }
 
+/* The unpin mark, drawn here rather than written as DOM text. axe 4.14
+   compares a control's accessible name against everything a SIGHTED user
+   sees (label-content-name-mismatch, WCAG 2.5.3) while excluding
+   aria-hidden content from the NAME, so hiding the glyph would not do. */
+.pin-chip-x::before {
+  content: "\00d7";
+}
+
 .pin-chip-x {
   width: 22px;
   height: 22px;
@@ -2606,3 +2614,8 @@ footer a {
 .hs-preset.is-warn {
   color: var(--warning-fg);
 }
+
+/* The copy-link glyphs, drawn here rather than written as DOM text. */
+.copy-link::before { content: "\01F517\00A0"; }
+.copy-link.is-copied::before { content: "\2713\00A0"; }
+.copy-link.is-failed::before { content: "!\00A0"; }
