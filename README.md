@@ -1,5 +1,11 @@
 # crypto-lab-pq-families
 
+## Isogeny research update — 31 October 2026
+
+The 30 October 2026 revision of Maher Mamah’s preprint (ePrint 2026/1821) revises concrete cost estimates for the newer isogeny-path algorithm. In the practical memory ranges studied, its expected advantage is concentrated at NIST Level I; substantial parallelization can change that comparison. These are heuristic estimates conditional on memory and parallelization assumptions, not demonstrated production SQIsign key recovery. This comparison does not execute the research attack or change SQIsign’s candidate status.
+
+Source: [Maher Mamah, *Complexity Analysis and Security Implications of the New Isogeny-Path Algorithm*](https://eprint.iacr.org/2026/1821), revised 30 October 2026. Preprint, not a standard or a demonstrated break of SQIsign.
+
 ## What It Is
 
 A high-level, interactive overview of the five major post-quantum cryptography (PQC) families: lattice-based, code-based, hash-based, multivariate, and isogeny-based. Where the rest of the crypto-lab portfolio drills into individual schemes, this demo zooms out to compare the families against one another — their underlying hard problems, representative schemes, public-key and signature sizes, NIST standardisation status, and the tradeoffs that decided which families won the first round of standardisation. The Rainbow signature scheme and SIKE key exchange were broken in practice in 2022; other multivariate and isogeny schemes continue in research. Everything runs client-side with no dependencies; the comparison corpus lives in a single typed data module.

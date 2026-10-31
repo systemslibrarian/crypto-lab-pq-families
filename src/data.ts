@@ -678,6 +678,12 @@ export const FAMILIES: Family[] = [
 		attacks: [
 			{
 				year: 2026,
+				name: 'Concrete costs of newer isogeny-path algorithms',
+				venue: 'ePrint 2026/1821; preprint, revised 30 October 2026',
+				summary: "The 30 October 2026 revision of Maher Mamah’s preprint (ePrint 2026/1821) revises concrete cost estimates for the newer isogeny-path algorithm. In the practical memory ranges studied, its expected advantage is concentrated at NIST Level I; substantial parallelization can change that comparison. These are heuristic estimates conditional on memory and parallelization assumptions, not demonstrated production SQIsign key recovery. This comparison does not execute the research attack or change SQIsign’s candidate status.",
+			},
+			{
+				year: 2026,
 				name: 'Targeted faults in deterministic CSIDH variants',
 				venue: 'ePrint 2026/2542; preprint, approved 20 October 2026 (received 19 October)',
 				summary: 'Deterministic execution can make the same secret-dependent step easier to target repeatedly. Banegas, Dimitrova and Trimoska study fault attacks on deterministic CSIDH variants and OSIDH-LD. They recover full OSIDH-LD keys in software fault simulation and separately demonstrate a targeted instruction skip on ChipWhisperer-Lite hardware. This is not complete hardware key recovery or a public-key-only mathematical break of CSIDH. The result requires targeted fault injection and output observations; it is distinct from the SIDH/SIKE mathematical break. This lab does not implement the attacked variants or reproduce the fault experiment.',
@@ -714,6 +720,13 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		references: [
+			{
+				authors: 'Maher Mamah',
+				year: 2026,
+				title: 'Complexity Analysis and Security Implications of the New Isogeny-Path Algorithm',
+				venue: 'ePrint 2026/1821; preprint, revised 30 October 2026',
+				url: 'https://eprint.iacr.org/2026/1821',
+			},
 			{
 				authors: 'Gustavo Banegas, Nia Dimitrova, Monika Trimoska',
 				year: 2026,
