@@ -678,6 +678,12 @@ export const FAMILIES: Family[] = [
 		attacks: [
 			{
 				year: 2026,
+				name: 'Smoothness bounds for the endomorphism-ring algorithm',
+				venue: 'ePrint 2026/2677; preprint, approved 31 October 2026 (received 29 October)',
+				summary: 'Ouyang, Wei and Xu report smoothness bounds that remove the heuristic from Wesolowski’s asymptotic p^(1/3+o(1)) endomorphism-ring algorithm. This is a theoretical result in a preprint, not demonstrated production SQIsign key recovery. It does not remove the separate memory, overhead and parallelization assumptions in concrete cost estimates, or make this comparison an implementation of the algorithm.',
+			},
+			{
+				year: 2026,
 				name: 'Concrete costs of newer isogeny-path algorithms',
 				venue: 'ePrint 2026/1821; preprint, revised 30 October 2026',
 				summary: "The 30 October 2026 revision of Maher Mamah’s preprint (ePrint 2026/1821) revises concrete cost estimates for the newer isogeny-path algorithm. In the practical memory ranges studied, its expected advantage is concentrated at NIST Level I; substantial parallelization can change that comparison. These are heuristic estimates conditional on memory and parallelization assumptions, not demonstrated production SQIsign key recovery. This comparison does not execute the research attack or change SQIsign’s candidate status.",
@@ -720,6 +726,13 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		references: [
+			{
+				authors: 'Yi Ouyang, Wei Wei, Zheng Xu',
+				year: 2026,
+				title: 'Smoothness of Shortest Isogenies to Frobenius Conjugates',
+				venue: 'ePrint 2026/2677; preprint, approved 31 October 2026',
+				url: 'https://eprint.iacr.org/2026/2677',
+			},
 			{
 				authors: 'Maher Mamah',
 				year: 2026,

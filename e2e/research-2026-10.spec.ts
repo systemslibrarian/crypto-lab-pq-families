@@ -42,3 +42,15 @@ test('isogeny concrete costs retain conditions and an accessible primary source'
   await page.locator('[data-view=sources]').click();
   await expect(page.locator('.ref-list a[href="https://eprint.iacr.org/2026/1821"]')).toBeVisible();
 });
+
+test('isogeny theory update stays distinct from practical key recovery', async ({ page }) => {
+  await page.goto('./#family=isogeny');
+  await page.locator('[data-view=attacks]').click();
+  const note = page.locator('.attack-item').filter({ hasText: 'Smoothness bounds for the endomorphism-ring algorithm' });
+  await expect(note).toBeVisible();
+  for (const text of ['31 October 2026', 'preprint', 'not demonstrated production SQIsign key recovery', 'separate memory, overhead and parallelization assumptions']) {
+    await expect(note).toContainText(text);
+  }
+  await page.locator('[data-view=sources]').click();
+  await expect(page.locator('.ref-list a[href="https://eprint.iacr.org/2026/2677"]')).toBeVisible();
+});

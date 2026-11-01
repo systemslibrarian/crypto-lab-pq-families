@@ -1,5 +1,12 @@
 # crypto-lab-pq-families
 
+## Isogeny theory update — 1 November 2026
+
+Ouyang, Wei and Xu report smoothness bounds that remove the heuristic from Wesolowski’s asymptotic p^(1/3+o(1)) endomorphism-ring algorithm. This is a theoretical result in a preprint, not demonstrated production SQIsign key recovery. It does not remove the separate memory, overhead and parallelization assumptions in concrete cost estimates, or make this comparison an implementation of the algorithm.
+
+Source: [Ouyang, Wei and Xu, ePrint 2026/2677](https://eprint.iacr.org/2026/2677), received 29 October, approved 31 October 2026. Open **Isogeny → Attacks** for the note and **Sources** for the paper. The separate concrete-cost note remains applicable.
+
+
 ## Isogeny research update — 31 October 2026
 
 The 30 October 2026 revision of Maher Mamah’s preprint (ePrint 2026/1821) revises concrete cost estimates for the newer isogeny-path algorithm. In the practical memory ranges studied, its expected advantage is concentrated at NIST Level I; substantial parallelization can change that comparison. These are heuristic estimates conditional on memory and parallelization assumptions, not demonstrated production SQIsign key recovery. This comparison does not execute the research attack or change SQIsign’s candidate status.
