@@ -6,10 +6,11 @@ for (const width of [1280, 380]) {
     test(`proof dependencies remain explicit at ${width}px in ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height: 900 });
       await page.emulateMedia({ reducedMotion: 'reduce' });
-      await page.goto('./');
+      await page.goto('./#section-proof-wrapper');
       await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
       const section = page.locator('#section-proof-wrapper');
-      await section.scrollIntoViewIfNeeded();
+      await expect.poll(async () => (await section.boundingBox())?.y).toBeGreaterThanOrEqual(100);
+      await expect.poll(async () => (await section.boundingBox())?.y).toBeLessThan(300);
       await expect(section.getByText('Classical proof dependency remains', { exact: true })).toBeVisible();
       await expect(section).toContainText('certificate chain and trust anchor');
       await page.getByLabel('Compare a design change').selectOption('proof');
