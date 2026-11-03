@@ -47,7 +47,10 @@ import {
 // a page refresh. We read/write the shared URLSearchParams so the two keys
 // don't clobber each other.
 function readHashParams(): URLSearchParams {
-	return new URLSearchParams(window.location.hash.replace(/^#/, ''));
+	const fragment = window.location.hash.replace(/^#/, '');
+	// Preserve a direct section link when the family router writes its default.
+	if (/^section-[a-z-]+$/.test(fragment)) return new URLSearchParams({ section: fragment });
+	return new URLSearchParams(fragment);
 }
 
 function writeHashParams(params: URLSearchParams): void {
@@ -80,7 +83,10 @@ const PIN_EVENT = 'pq-pins-changed';
 
 function getPins(): Set<string> {
 	const raw = readHashParams().get('pins') ?? '';
-	return new Set(raw.split(',').filter(Boolean));
+	const requested = new Set(raw.split(','));
+	// Return catalog strings, never URL-supplied strings, to rendering callers.
+	return new Set(FAMILIES.flatMap((family) => family.schemes)
+		.filter((scheme) => requested.has(scheme.name)).map((scheme) => scheme.name));
 }
 
 function setPins(pins: Set<string>): void {
@@ -2515,6 +2521,10 @@ export function mountApp(root: HTMLDivElement): void {
 	wireStickyNav(shell);
 	wireStartHereJumps(shell);
 	wireAudience();
+	const requestedSection = readHashParams().get('section');
+	if (requestedSection && SECTIONS.some((section) => section.id === requestedSection)) {
+		requestAnimationFrame(() => document.getElementById(requestedSection)?.scrollIntoView());
+	}
 }
 
 function wireAudience(): void {
