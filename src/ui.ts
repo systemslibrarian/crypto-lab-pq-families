@@ -1,4 +1,5 @@
 import { renderQuantumResources } from './quantum-resources.ts';
+import { renderProofWrapper } from './proof-wrapper.ts';
 // ui.ts — builds and mounts the Post-Quantum Families interactive overview.
 import {
 	CLASSICAL_BASELINE,
@@ -875,7 +876,7 @@ function renderHandshakeCalculator(): HTMLElement {
 			kem.maturity === 'broken' || sig.maturity === 'broken'
 				? `<strong class="hs-note-warn">\u26a0 One of these schemes is broken \u2014 shown for comparison only.</strong> `
 				: '';
-		noteHost.innerHTML = `${brokenWarn}This handshake spends <strong>${formatBytes(pqcTotal)}</strong> on key exchange and authentication \u2014 about <strong>${ratioText}\u00d7</strong> the classical baseline (<strong>${formatBytes(classical)}</strong>).${state.hybrid ? ' Hybrid adds the classical hedge so the connection stays secure as long as either component holds.' : ''}`;
+		noteHost.innerHTML = `${brokenWarn}This handshake spends <strong>${formatBytes(pqcTotal)}</strong> on key exchange and authentication \u2014 about <strong>${ratioText}\u00d7</strong> the classical baseline (<strong>${formatBytes(classical)}</strong>).${state.hybrid ? ' Hybrid byte counts do not establish security: preserving it when one component fails requires a robust combiner, authenticated binding and downgrade resistance.' : ''}`;
 
 		paintBrokenPanel([
 			{ role: 'KEM', family: kemPick.family, scheme: kem },
@@ -2348,7 +2349,7 @@ function renderInfoTabs(): HTMLElement {
 		Shor: `<p>Peter Shor\u2019s 1994 quantum algorithm factors integers and computes discrete logarithms in polynomial time. That single result breaks RSA, Diffie\u2013Hellman, and elliptic-curve cryptography \u2014 the backbone of today\u2019s public-key security \u2014 once a sufficiently large, fault-tolerant quantum computer exists.</p><p>Post-quantum families are chosen precisely because no efficient quantum algorithm is known for their underlying problems. Grover\u2019s algorithm still gives a quadratic speedup against symmetric primitives, which is why AES-256 and SHA-384 remain recommended.</p>${renderQuantumResources()}`,
 		'Harvest now': `<p>\u201CHarvest now, decrypt later\u201D is the threat driving urgency today. An adversary can record encrypted traffic now and simply wait for a quantum computer to decrypt it years later. Any data that must stay secret beyond the arrival of quantum computing is already at risk.</p><p>This is why migration to ML-KEM and hybrid key exchange is happening before large quantum computers exist \u2014 the clock on long-lived secrets is already running.</p>`,
 		'Why lattices won': `<p>Lattice schemes hit the sweet spot: kilobyte-scale keys, fast operations, strong security reductions, and the rare ability to support KEMs, signatures, and homomorphic encryption from one foundation. NIST made ML-KEM and ML-DSA its primary standards for exactly this balance.</p><p>Code-based and hash-based families serve as conservative, algorithmically diverse backups. Multivariate and isogeny finalists were broken outright in 2022, underscoring why diversity matters.</p>`,
-		Hybrids: `<p>During migration, the safe move is to combine a classical algorithm with a post-quantum one so the result stays secure as long as either component holds. TLS deployments pairing X25519 with ML-KEM-768 are already widespread.</p><p>This hedges against two risks at once: an undiscovered flaw in a young PQC scheme, and the eventual arrival of quantum computers that break the classical half.</p>`,
+		Hybrids: `<p>A correctly constructed robust hybrid can preserve a specified security property when one component remains secure. Simply placing two algorithms together does not establish that guarantee. TLS deployments pairing X25519 with ML-KEM-768 are already widespread.</p><p>The argument depends on the combiner, authentication and downgrade protections. See the proof-wrapper dependency lesson below for a composition where changing only the signature is insufficient.</p>`,
 		'NIST categories': `<p>NIST PQC parameter sets are pinned to one of five <em>security categories</em>, each defined by the effort needed to break a specific symmetric benchmark. The definitions are in NIST\u2019s PQC Call for Proposals, \u00A74.A.5, and they are quoted below in NIST\u2019s own form.</p>${categoriesTable}<p style="margin-top:12px"><strong>Read the two columns as alternatives, not as a pair.</strong> NIST states each AES-pegged category as \u201C2^x/MAXDEPTH quantum gates <em>or</em> 2^y classical gates\u201D. MAXDEPTH is a free parameter bounding how long a serial quantum computation is plausible; NIST suggests anywhere from 2^40 (a year of currently envisioned quantum hardware) to 2^96 (an upper bound). That depth bound is why Grover does not reach the na\u00EFve 2^(n/2) here \u2014 a depth-limited Grover must be run in parallel, and parallelism buys only a square-root-of-the-parallelism saving.</p><p style="margin-top:12px">This is also where a common mix-up comes from: at MAXDEPTH = 2^96 the quantum thresholds reduce to roughly 2^74, 2^137 and 2^202, and those quotients often get printed next to the raw classical gate counts as if the two were the same metric. They are not. Always say which MAXDEPTH you assumed.</p>`,
 	};
 
@@ -2463,6 +2464,7 @@ const SECTIONS: { id: string; label: string; render: () => HTMLElement; audience
 	{ id: 'section-impl', label: 'Shipping', render: renderImplStatus, audience: ['engineer'] },
 	{ id: 'section-timeline', label: 'Timeline', render: renderTimeline, audience: ['student', 'executive'] },
 	{ id: 'section-context', label: 'Context', render: renderInfoTabs, audience: ['student'] },
+	{ id: 'section-proof-wrapper', label: 'Proof wrappers', render: renderProofWrapper, audience: ['student', 'engineer', 'executive'] },
 	{ id: 'section-glossary', label: 'Glossary', render: renderGlossary, audience: ['student'] },
 	{ id: 'section-remember', label: 'Remember', render: renderRemember, audience: ['student', 'engineer', 'executive'] },
 ];
@@ -2827,7 +2829,7 @@ function renderRemember(): HTMLElement {
         <span class="remember-num">4</span>
         <div class="remember-body">
           <p class="remember-title">Hybrid is the practical deployment posture, now.</p>
-          <p class="panel-copy">Pair a classical scheme (X25519, ECDSA) with a PQC scheme so the joint construction stays secure as long as either component holds. Cloudflare and Google already ship X25519 + ML-KEM-768.</p>
+          <p class="panel-copy">A robust classical/PQC hybrid can hedge against a component failure, under its stated composition assumptions. Check the combiner, key binding and downgrade protections. Cloudflare and Google already ship X25519 + ML-KEM-768.</p>
         </div>
       </li>
     </ol>

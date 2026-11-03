@@ -195,6 +195,7 @@ export const SECTIONS = [
   'section-impl',
   'section-timeline',
   'section-context',
+  'section-proof-wrapper',
   'section-glossary',
   'section-remember',
 ] as const;
@@ -973,6 +974,17 @@ export async function driveAllStates(page: Page, theme: string): Promise<void> {
     await expect(page.locator('#info-panel')).not.toBeEmpty();
     await scanAt(`context tab = ${tab}`);
   }
+
+  for (const [value, headline] of [
+    ['signature', 'Classical proof dependency remains'],
+    ['proof', 'Candidate replacement — still requires review'],
+    ['parallel', 'Parallel example: require BOTH signatures'],
+  ]) {
+    await page.locator('#proof-case').selectOption(value);
+    await expect(page.locator('#proof-result h3')).toHaveText(headline!);
+    await scanAt(`proof dependency case = ${value}`);
+  }
+  await page.locator('#proof-case').selectOption('signature');
 
   // ── The two disclosures, opened through their own summaries ─────────────
   const shut = page.locator('details:not([open]) > summary:visible');
