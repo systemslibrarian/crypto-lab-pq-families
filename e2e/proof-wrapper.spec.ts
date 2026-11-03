@@ -26,3 +26,13 @@ for (const width of [1280, 380]) {
     });
   }
 }
+
+test('URL pins resolve to catalog names before rendering', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const hostile = '<img src=x onerror="window.__pinnedXss=true">';
+  await page.goto('./#section=section-proof-wrapper&pins=' + encodeURIComponent(hostile + ',ML-KEM-768'));
+  await expect(page.locator('.pin-chip-name')).toHaveText(['ML-KEM-768']);
+  await expect(page.locator('.pinned-drawer img')).toHaveCount(0);
+  await expect(page.locator('.pinned-drawer')).not.toContainText(hostile);
+  expect(await page.evaluate(() => '__pinnedXss' in window)).toBe(false);
+});

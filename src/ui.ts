@@ -83,7 +83,10 @@ const PIN_EVENT = 'pq-pins-changed';
 
 function getPins(): Set<string> {
 	const raw = readHashParams().get('pins') ?? '';
-	return new Set(raw.split(',').filter(Boolean));
+	const requested = new Set(raw.split(','));
+	// Return catalog strings, never URL-supplied strings, to rendering callers.
+	return new Set(FAMILIES.flatMap((family) => family.schemes)
+		.filter((scheme) => requested.has(scheme.name)).map((scheme) => scheme.name));
 }
 
 function setPins(pins: Set<string>): void {
