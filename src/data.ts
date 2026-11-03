@@ -1022,7 +1022,7 @@ export const GLOSSARY: GlossaryEntry[] = [
 	},
 	{
 		term: 'Hybrid (in PQ deployment)',
-		def: 'Combining a classical scheme (X25519, ECDSA) with a PQC scheme so the joint construction is secure as long as *either* component is. Current TLS PQ deployments are almost all hybrid.',
+		def: 'Combining classical and PQ components. Preserving security when one breaks requires a robust composition for the intended property, including appropriate binding and downgrade resistance; merely combining algorithms is insufficient.',
 	},
 	{
 		term: 'Harvest now, decrypt later',
