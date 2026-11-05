@@ -81,12 +81,26 @@ function writeHashFamily(id: string): void {
 // directly to each other.
 const PIN_EVENT = 'pq-pins-changed';
 
-function getPins(): Set<string> {
-	const raw = readHashParams().get('pins') ?? '';
+/**
+ * Resolve a raw `pins` parameter to catalog scheme names.
+ *
+ * The returned strings come from FAMILIES, never from the URL, so every
+ * rendering caller interpolates a value this app defines. CodeQL reported the
+ * drawer's `${name}` as js/xss (src/ui.ts) when it was URL-supplied; it cannot
+ * see that the drawer's own `findSchemeByName(name)` check already filtered
+ * unknown names, which is why that path was not injectable and why a browser
+ * test cannot tell the two implementations apart. This function is exported so
+ * the change HAS a guard: `src/ui.pins.test.ts` asserts the resolved set holds
+ * catalog strings and drops everything else.
+ */
+export function resolvePins(raw: string): Set<string> {
 	const requested = new Set(raw.split(','));
-	// Return catalog strings, never URL-supplied strings, to rendering callers.
 	return new Set(FAMILIES.flatMap((family) => family.schemes)
 		.filter((scheme) => requested.has(scheme.name)).map((scheme) => scheme.name));
+}
+
+function getPins(): Set<string> {
+	return resolvePins(readHashParams().get('pins') ?? '');
 }
 
 function setPins(pins: Set<string>): void {
