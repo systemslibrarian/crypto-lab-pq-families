@@ -153,6 +153,12 @@ export const FAMILIES: Family[] = [
 		attacks: [
 			{
 				year: 2026,
+				name: 'Keyber: faulted ML-KEM key generation',
+				venue: 'ePrint 2026/2766 (November 4; preprint, physical-fault attack)',
+				summary: 'Kumar et al. report end-to-end ML-KEM-512 secret-key recovery on ARM Cortex-M4 after one physical overclock fault during key generation and subsequent decapsulation queries using the faulty public key. Other parameter sets are analyzed, but the physical demonstration is for 512. This is conditional on device fault access and a decapsulation oracle, not a public-key-only break of Module-LWE.',
+			},
+			{
+				year: 2026,
 				name: 'Refined MSIS security estimates (revision 16 October 2026)',
 				venue: 'ePrint 2026/607; revision of TCHES 2026 research',
 				summary: 'Zhang, Zhou and Qu refine lattice-reduction cost estimates for Dilithium, reporting 3.65–6.09 bits below their conservative Core-SVP baseline. This is model-dependent extrapolation supported by lattice experiments, not demonstrated production-key recovery. It does not revise FIPS 204 categories, and the difference must not be subtracted from unrelated historical estimates.',
@@ -181,6 +187,13 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		references: [
+			{
+				authors: 'Kumar, Ram, Kundu, Saha',
+				year: 2026,
+				title: 'Keyber: Recovering the Signal by Amplifying the Noise in ML-KEM (November 4; preprint)',
+				venue: 'Cryptology ePrint Archive 2026/2766',
+				url: 'https://eprint.iacr.org/2026/2766',
+			},
 			{
 				authors: 'Zhang, Zhou, Qu',
 				year: 2026,
