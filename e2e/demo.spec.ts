@@ -6,7 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
  * The a11y suite proves the page is reachable; this one proves the page is
  * telling the truth. Every assertion below reads a value the browser computed
  * during the run — the Lamport verdicts come from lamportVerify, the leak
- * counts from the two digests SHA-256 just produced, the ISD verdicts from the
+ * counts from the two digests SHA-256 just produced, the ISD trial estimates from the
  * binomial ratio, the reduction trace from lagrangeGaussStepDetailed. Failure
  * paths are asserted alongside success paths, because an exhibit that can only
  * show success is not showing anything.
@@ -251,35 +251,34 @@ test.describe('Lagrange–Gauss reduction trace', () => {
 });
 
 test.describe('ISD work calculator', () => {
-  test('each McEliece preset lands in the category the binomial ratio implies', async ({ page }) => {
+  test('each McEliece preset preserves its trial exponent without assigning a category', async ({ page }) => {
     await gotoLab(page);
 
-    // Cat 1 parameters: raw Prange comes out at 142.8 bits — just under the 143-bit
-    // Cat 1 floor, which is exactly the caveat the section makes about textbook ISD.
+    // Presets keep their trial exponents, but none supplies a gate-cost category.
     await page.locator('[data-isd-preset="mc-348864"]').click();
-    await expect(page.locator('.isd-bits')).toHaveText('142.8 bits');
-    await expect(page.locator('.isd-qbits')).toHaveText('≈ 71.4 bits');
-    await expect(page.locator('.isd-cat')).toContainText('near Cat 1 floor');
-    await expect(page.locator('.isd-cat')).toHaveClass(/isd-cat--mid/);
+    await expect(page.locator('.isd-bits')).toHaveText('142.8');
+    await expect(page.locator('.isd-qbits')).toHaveText('≈ 71.4 (queries ≈ 2^71.4)');
+    await expect(page.locator('.isd-cat')).toHaveText('Category not assessed by this trial-count model');
+    await expect(page.locator('.isd-cat')).toHaveClass('rec-line-value isd-cat');
 
     await page.locator('[data-isd-preset="mc-460896"]').click();
-    await expect(page.locator('.isd-bits')).toHaveText('184.9 bits');
-    await expect(page.locator('.isd-cat')).toContainText('≥ Cat 1 floor');
-    await expect(page.locator('.isd-cat')).toHaveClass(/isd-cat--ok/);
+    await expect(page.locator('.isd-bits')).toHaveText('184.9');
+    await expect(page.locator('.isd-cat')).toHaveText('Category not assessed by this trial-count model');
+    await expect(page.locator('.isd-cat')).toHaveClass('rec-line-value isd-cat');
 
     await page.locator('[data-isd-preset="mc-6688128"]').click();
-    await expect(page.locator('.isd-bits')).toHaveText('262.4 bits');
-    await expect(page.locator('.isd-cat')).toContainText('≥ Cat 3 floor');
-    await expect(page.locator('.isd-cat')).toHaveClass(/isd-cat--ok/);
+    await expect(page.locator('.isd-bits')).toHaveText('262.4');
+    await expect(page.locator('.isd-cat')).toHaveText('Category not assessed by this trial-count model');
+    await expect(page.locator('.isd-cat')).toHaveClass('rec-line-value isd-cat');
   });
 
-  test('weak parameters are reported as weak', async ({ page }) => {
+  test('lower trial counts still do not assign a security category', async ({ page }) => {
     await gotoLab(page);
     await page.locator('[data-isd-preset="mc-348864"]').click();
     await page.locator('#isd-t').fill('10');
-    await expect(page.locator('.isd-bits')).toHaveText('21.9 bits');
-    await expect(page.locator('.isd-cat')).toContainText('well below PQC-grade');
-    await expect(page.locator('.isd-cat')).toHaveClass(/isd-cat--bad/);
+    await expect(page.locator('.isd-bits')).toHaveText('21.9');
+    await expect(page.locator('.isd-cat')).toHaveText('Category not assessed by this trial-count model');
+    await expect(page.locator('.isd-cat')).toHaveClass('rec-line-value isd-cat');
   });
 });
 

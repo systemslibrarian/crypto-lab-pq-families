@@ -218,8 +218,8 @@ export async function forgeFromLeak(
 // =====================================================================
 //
 // Prange (1962) iterates a random information-set selection; each iteration
-// succeeds with probability C(n-k, t) / C(n, t). Expected work is therefore
-// C(n, t) / C(n-k, t) operations, ignoring polynomial factors. We compute
+// captures the error support with probability C(n-k, t) / C(n, t), giving
+// C(n, t) / C(n-k, t) trials as a leading search term, not gate cost. We compute
 // log2 C(n, k) directly (summing logs of the ratio terms) so n in the
 // thousands stays numerically stable — no huge intermediate factorials.
 export function log2Binom(n: number, k: number): number {
@@ -233,7 +233,7 @@ export function log2Binom(n: number, k: number): number {
 	return r;
 }
 
-// Classical Prange work in log2 bits for code parameters (n, k, t):
+// log2 expected Prange trials (leading search term) for code parameters (n, k, t):
 //   log2( C(n, t) / C(n-k, t) ).
 // Returns NEGATIVE_INFINITY / NaN-safe handling for out-of-range inputs; the
 // caller should validate k < n and t <= n-k before display.
