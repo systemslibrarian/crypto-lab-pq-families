@@ -472,6 +472,12 @@ export const FAMILIES: Family[] = [
 				name: 'SLH-DSA-SHAKE power analysis',
 				summary: 'Carrera Rodriguez et al., ePrint 2026/2584 (received 21 October; approved 24 October 2026), preprint; attack-model-conditional. Non-profiled correlation power analysis recovers a full secret seed in SLH-DSA-SHAKE experiments on a 32-bit microcontroller, enabling forgery. The attack requires physical power measurements; it is not a mathematical break of SLH-DSA or SHAKE and does not establish vulnerability of SHA-2 browser implementations. This comparison does not reproduce the experiment.',
 			},
+			{
+				year: 2026,
+				name: 'SLH-DSA-SHA-2 power analysis',
+				venue: 'ePrint 2026/2753 (November 4; preprint, physical power analysis)',
+				summary: 'Chang et al. report non-profiled correlation power analysis of the address-based pseudorandom function for all six SHA-2 SLH-DSA parameter sets on an STM32F303 Cortex-M4. They measured 5,000 traces per seed under each evaluated condition and targeted both SHA-256 compression rounds and message-schedule expansion. Their success rates are conditional stage-wise results with required preceding secret values supplied correctly, not demonstrated end-to-end full-seed recovery. This requires physical power access; it is not a mathematical break of SLH-DSA or SHA-2, and this browser comparison does not reproduce the experiment.',
+			},
 		],
 		references: [
 			{
@@ -516,6 +522,13 @@ export const FAMILIES: Family[] = [
 				title: 'SHAKEing SLH-DSA with Non-profiled SCAs',
 				venue: 'ePrint 2026/2584; preprint, received 21 October and approved 24 October 2026',
 				url: 'https://eprint.iacr.org/2026/2584',
+			},
+			{
+				authors: 'Chang, Lee, Min and Han',
+				year: 2026,
+				title: 'Correlation Power Analysis on SHA-2-Based SLH-DSA',
+				venue: 'ePrint 2026/2753; preprint, published 4 November 2026',
+				url: 'https://eprint.iacr.org/2026/2753',
 			},
 		],
 	},
