@@ -1433,8 +1433,8 @@ function renderLatticeViz(): HTMLElement {
 
 // --- Section: information-set-decoding (ISD) work calculator -------------
 // Prange (1962) iterates a random information-set selection; each iteration
-// succeeds with probability C(n-k, t) / C(n, t). Expected work is therefore
-// C(n, t) / C(n-k, t) operations, ignoring polynomial factors.
+// captures the error support with probability C(n-k, t) / C(n, t), giving
+// C(n, t) / C(n-k, t) trials as a leading search term, not gate cost.
 //
 // log₂ C(n, k) is computed directly so n in the thousands stays numerically
 // stable — the implementation lives in ./crypto.ts (log2Binom) and is shared
@@ -1454,9 +1454,9 @@ function renderISDCalc(): HTMLElement {
     <div class="section-heading-row">
       <div>
         <p class="section-kicker">Calculate</p>
-        <h2>ISD Work: Prange Attack Cost for Code Parameters</h2>
+        <h2>ISD Search: Expected Prange Trials for Code Parameters</h2>
         <p class="section-footnote">
-		  Each Prange ISD trial succeeds with probability C(n−k, t) / C(n, t), so expected work is <span class="mono-inline">C(n, t) / C(n−k, t)</span>. Slide n, k, t and watch the generic decoding cost move relative to NIST's category floors. Raw Prange does not model modern ISD or structural key-recovery attacks on masked Goppa codes. Weis (ePrint 2026/1984, preprint) estimates such an attack below generic ISD costs for the candidate sets under stated heuristics. This is a teaching tool, not an overall security estimate.
+		  A random information set contains all t errors with probability C(n−k, t) / C(n, t), giving the leading expected-trial term <span class="mono-inline">C(n, t) / C(n−k, t)</span>. Slide n, k, t to explore the search term. This omits rank/success constants and per-trial computation; it does not assess a NIST category. Raw Prange does not model modern ISD or structural key-recovery attacks on masked Goppa codes. Weis (ePrint 2026/1984, preprint) estimates such an attack below generic ISD costs for the candidate sets under stated heuristics. This is a teaching tool, not an overall security estimate.
         </p>
       </div>
     </div>
@@ -1486,23 +1486,23 @@ function renderISDCalc(): HTMLElement {
 
     <div class="isd-result">
       <div class="rec-line">
-        <span class="rec-line-label">Prange bits (classical)</span>
+        <span class="rec-line-label">log₂ expected Prange trials (leading search term)</span>
         <span class="rec-line-value mono-inline isd-bits"></span>
       </div>
       <div class="rec-line">
-        <span class="rec-line-label">Approx. with Grover (quantum)</span>
+        <span class="rec-line-label">Idealized Grover query exponent</span>
         <span class="rec-line-value mono-inline isd-qbits"></span>
       </div>
       <div class="rec-line">
-        <span class="rec-line-label">Per-trial success probability</span>
+        <span class="rec-line-label">Error-support capture probability</span>
         <span class="rec-line-value mono-inline isd-prob"></span>
       </div>
       <div class="rec-line">
-        <span class="rec-line-label">Expected trials</span>
+        <span class="rec-line-label">Expected trials (leading term)</span>
         <span class="rec-line-value mono-inline isd-trials"></span>
       </div>
       <div class="rec-line">
-        <span class="rec-line-label">Prange only vs NIST floors</span>
+        <span class="rec-line-label">NIST security category</span>
         <span class="rec-line-value isd-cat"></span>
       </div>
     </div>
@@ -1510,9 +1510,12 @@ function renderISDCalc(): HTMLElement {
     <p class="isd-note">
       Prange (1962) is the textbook ISD — transparent, easy to verify against the binomial ratio,
       and a useful first estimate. Modern variants (May–Meurer–Thomae 2011, Becker–Joux–May–Meurer 2012,
-      Both–May 2018) tighten the asymptotic exponent and shave bits at typical PQC parameters; NIST's
-      category floors of 143 / 207 / 272 classical bits at Cat 1 / 3 / 5 are pegged to those best-known
-      attacks with memory constraints. The point of the slider is to feel how n, k, t trade off — not to
+      Both–May 2018) tighten the asymptotic exponent and shave bits at typical PQC parameters.
+      NIST categories compare attack resources with symmetric benchmarks; a count of trials is not
+      a count of classical or quantum gates. The idealized half-exponent counts Grover queries only:
+      it excludes oracle construction, reversible elimination, rank/success constants, depth,
+      logical and physical width, memory access and error correction. The slider explores n, k, t;
+      it does not
 		  reproduce the standardisation analyses bit-for-bit. Nor does it include
 		  <a href="https://eprint.iacr.org/2026/1984" target="_blank" rel="noopener noreferrer">structural key recovery</a>:
 		  the September 2026 preprint estimates lower costs under stated heuristics,
@@ -1534,13 +1537,13 @@ function renderISDCalc(): HTMLElement {
 		const nk = state.n - state.k;
 		const bits = log2Binom(state.n, state.t) - log2Binom(nk, state.t);
 		const valid = state.k < state.n && state.t <= nk && Number.isFinite(bits);
-		const bitsText = valid ? `${bits.toFixed(1)} bits` : '— (invalid)';
+		const bitsText = valid ? `${bits.toFixed(1)}` : '— (invalid)';
 		(section.querySelector('.isd-bits') as HTMLElement).textContent = bitsText;
 		(section.querySelector('.isd-qbits') as HTMLElement).textContent = valid
-			? `≈ ${(bits / 2).toFixed(1)} bits`
+			? `≈ ${(bits / 2).toFixed(1)} (queries ≈ 2^${(bits / 2).toFixed(1)})`
 			: '—';
 
-		// Per-trial probability of randomly hitting a valid info set is 2^-bits;
+		// Probability of capturing the error support is 2^-bits;
 		// expected trials is 2^bits. Render in human-friendly base-10 order of mag.
 		const log10 = bits * Math.log10(2);
 		const probText = valid ? `1 in 10^${log10.toFixed(1)}` : '—';
@@ -1548,30 +1551,10 @@ function renderISDCalc(): HTMLElement {
 		(section.querySelector('.isd-prob') as HTMLElement).textContent = probText;
 		(section.querySelector('.isd-trials') as HTMLElement).textContent = trialsText;
 
-		// Compare raw Prange cost against the NIST classical floors descriptively.
-		// Raw Prange is the weakest ISD, so "≥ floor" here means the *textbook*
-		// attack already exceeds it; this says nothing about modern ISD or
-		// masked-Goppa structural attacks.
-		const cat = !valid
-			? '—'
-			: bits >= 272
-				? 'Prange cost ≥ Cat 5 floor (2^272 classical)'
-				: bits >= 207
-					? 'Prange cost ≥ Cat 3 floor (2^207 classical)'
-					: bits >= 143
-						? 'Prange cost ≥ Cat 1 floor (2^143 classical)'
-						: bits >= 100
-							? 'Prange cost near Cat 1 floor (other attacks not modeled)'
-							: 'Prange cost < 2^100 — well below PQC-grade';
+		// An uncosted trial ratio cannot determine a gate-cost security category.
 		const catEl = section.querySelector('.isd-cat') as HTMLElement;
-		catEl.textContent = cat;
-		catEl.className = !valid
-			? 'rec-line-value isd-cat'
-			: bits >= 143
-				? 'rec-line-value isd-cat isd-cat--ok'
-				: bits >= 100
-					? 'rec-line-value isd-cat isd-cat--mid'
-					: 'rec-line-value isd-cat isd-cat--bad';
+		catEl.textContent = valid ? 'Category not assessed by this trial-count model' : '—';
+		catEl.className = 'rec-line-value isd-cat';
 	}
 
 	function attach(input: HTMLInputElement, key: 'n' | 'k' | 't'): void {
