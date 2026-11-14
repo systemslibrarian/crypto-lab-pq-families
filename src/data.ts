@@ -607,8 +607,21 @@ export const FAMILIES: Family[] = [
 				name: 'Beullens: Rainbow key recovery',
 				summary: 'Rectangular MinRank attack recovers Rainbow Ia keys in a weekend on a single laptop \u2014 ended the Rainbow finalist.',
 			},
+			{
+				year: 2026,
+				name: 'Li–Tao: divided-power wedge attacks on UOV',
+				venue: 'ePrint 2026/2272; preprint revised 14 November 2026',
+				summary: 'Conditional structural-attack estimates for selected Round-3 UOV parameters depend on conjectural Hilbert-series predictions, supported by small-instance experiments. This is not demonstrated production-key recovery. The paper uses different parameters from the older ov-Ip comparison row above: do not transfer its estimates to that row. This browser does not execute the attack. See Li and Tao in Sources.',
+			},
 		],
 		references: [
+			{
+				authors: 'Peigen Li, Siyong Tao',
+				year: 2026,
+				title: 'Attacking UOV-based Signatures over divided power algebras',
+				venue: 'ePrint 2026/2272; preprint revised 14 November 2026',
+				url: 'https://eprint.iacr.org/2026/2272',
+			},
 			{
 				authors: 'Patarin',
 				year: 1997,
