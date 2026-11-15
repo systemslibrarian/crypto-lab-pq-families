@@ -1078,7 +1078,7 @@ function renderLatticeViz(): HTMLElement {
         <p class="section-kicker">See it</p>
         <h2>What "Short Vector" Means</h2>
         <p class="section-footnote">
-          Drag <span class="lat-b1-name">b₁</span> and <span class="lat-b2-name">b₂</span> to reshape the lattice — the highlighted vector is always the shortest non-zero lattice point. SVP in 2D is trivial; ML-KEM hides a secret in a noisy version of this picture in <strong>256 dimensions</strong>, where finding short vectors is conjectured hard for both classical and quantum computers.
+          Drag <span class="lat-b1-name">b₁</span> and <span class="lat-b2-name">b₂</span> to reshape the lattice — the highlighted vector is always the shortest non-zero lattice point. SVP in 2D is trivial; ML-KEM hides a secret in a noisy version of this picture in <strong>512 to 1,024 dimensions</strong> — a module of rank k = 2 to 4 over a degree-256 ring (FIPS 203, Table 2) — where finding short vectors is conjectured hard for both classical and quantum computers.
         </p>
       </div>
     </div>
@@ -1456,7 +1456,7 @@ function renderISDCalc(): HTMLElement {
         <p class="section-kicker">Calculate</p>
         <h2>ISD Search: Expected Prange Trials for Code Parameters</h2>
         <p class="section-footnote">
-		  A random information set contains all t errors with probability C(n−k, t) / C(n, t), giving the leading expected-trial term <span class="mono-inline">C(n, t) / C(n−k, t)</span>. Slide n, k, t to explore the search term. This omits rank/success constants and per-trial computation; it does not assess a NIST category. Raw Prange does not model modern ISD or structural key-recovery attacks on masked Goppa codes. Weis (ePrint 2026/1984, preprint) estimates such an attack below generic ISD costs for the candidate sets under stated heuristics. This is a teaching tool, not an overall security estimate.
+		  A random information set contains none of the t errors with probability C(n−k, t) / C(n, t), giving the leading expected-trial term <span class="mono-inline">C(n, t) / C(n−k, t)</span>. Slide n, k, t to explore the search term. This omits rank/success constants and per-trial computation; it does not assess a NIST category. Raw Prange does not model modern ISD or structural key-recovery attacks on masked Goppa codes. Weis (ePrint 2026/1984, preprint) estimates such an attack below generic ISD costs for the candidate sets under stated heuristics. This is a teaching tool, not an overall security estimate.
         </p>
       </div>
     </div>
@@ -1595,10 +1595,10 @@ function renderImplStatus(): HTMLElement {
 	// Status approximate as of mid-2026; based on each project's published changelogs
 	// and PQC-related releases. Footnote is explicit about this snapshot semantics.
 	const rows: { scheme: string; cells: CellState[] }[] = [
-		{ scheme: 'ML-KEM-768', cells: ['ship', 'exp', 'ship', 'ship', 'ship', 'ship'] },
-		{ scheme: 'ML-DSA-65', cells: ['ship', 'exp', 'exp', 'ship', 'ship', 'exp'] },
+		{ scheme: 'ML-KEM-768', cells: ['ship', 'ship', 'ship', 'ship', 'ship', 'ship'] },
+		{ scheme: 'ML-DSA-65', cells: ['ship', 'ship', 'exp', 'ship', 'ship', 'exp'] },
 		{ scheme: 'Falcon-512 (FN-DSA)', cells: ['ship', 'exp', 'none', 'ship', 'none', 'planned'] },
-		{ scheme: 'SLH-DSA-128f (SPHINCS+)', cells: ['ship', 'exp', 'none', 'ship', 'none', 'exp'] },
+		{ scheme: 'SLH-DSA-128f (SPHINCS+)', cells: ['ship', 'ship', 'none', 'ship', 'none', 'exp'] },
 		{ scheme: 'HQC-128', cells: ['ship', 'none', 'none', 'exp', 'none', 'planned'] },
 		{ scheme: 'Classic McEliece', cells: ['ship', 'none', 'none', 'exp', 'none', 'planned'] },
 		{ scheme: 'BIKE', cells: ['ship', 'none', 'none', 'exp', 'none', 'none'] },
@@ -1651,7 +1651,7 @@ function renderImplStatus(): HTMLElement {
       </table>
     </div>
     <p class="section-footnote impl-footnote">
-      OpenSSL 3.5 adds ML-KEM via providers; BoringSSL has shipped X25519+ML-KEM-768 hybrids
+      OpenSSL 3.5.0 (8 April 2025) added ML-KEM, ML-DSA and SLH-DSA; BoringSSL has shipped X25519+ML-KEM-768 hybrids
       since 2023. liboqs and the OQS provider are the most complete reference. For Java/.NET,
       BouncyCastle has the broadest direct support. <a href="https://openquantumsafe.org" target="_blank" rel="noopener noreferrer">openquantumsafe.org</a>
       tracks current status with version numbers.
@@ -1670,7 +1670,7 @@ function renderImplStatus(): HTMLElement {
 //
 // One-time only: signing two messages reveals both halves at every position
 // where the digests differ, which is the whole point of XMSS/LMS/SPHINCS+
-// wrapping this construction in a Merkle / hypertree.
+// wrapping a one-time signature — LM-OTS, WOTS+ — in a Merkle / hypertree.
 //
 // The Lamport keygen/sign/verify primitives and the bit-indexing helper live
 // in ./crypto.ts and are shared verbatim with the unit tests — the demo below
@@ -2351,7 +2351,7 @@ function renderInfoTabs(): HTMLElement {
 	const panels: Record<string, string> = {
 		Shor: `<p>Peter Shor\u2019s 1994 quantum algorithm factors integers and computes discrete logarithms in polynomial time. That single result breaks RSA, Diffie\u2013Hellman, and elliptic-curve cryptography \u2014 the backbone of today\u2019s public-key security \u2014 once a sufficiently large, fault-tolerant quantum computer exists.</p><p>Post-quantum families are chosen precisely because no efficient quantum algorithm is known for their underlying problems. Grover\u2019s algorithm still gives a quadratic speedup against symmetric primitives, which is why AES-256 and SHA-384 remain recommended.</p>${renderQuantumResources()}`,
 		'Harvest now': `<p>\u201CHarvest now, decrypt later\u201D is the threat driving urgency today. An adversary can record encrypted traffic now and simply wait for a quantum computer to decrypt it years later. Any data that must stay secret beyond the arrival of quantum computing is already at risk.</p><p>This is why migration to ML-KEM and hybrid key exchange is happening before large quantum computers exist \u2014 the clock on long-lived secrets is already running.</p>`,
-		'Why lattices won': `<p>Lattice schemes hit the sweet spot: kilobyte-scale keys, fast operations, strong security reductions, and the rare ability to support KEMs, signatures, and homomorphic encryption from one foundation. NIST made ML-KEM and ML-DSA its primary standards for exactly this balance.</p><p>Code-based and hash-based families serve as conservative, algorithmically diverse backups. Multivariate and isogeny finalists were broken outright in 2022, underscoring why diversity matters.</p>`,
+		'Why lattices won': `<p>Lattice schemes hit the sweet spot: kilobyte-scale keys, fast operations, strong security reductions, and the rare ability to support KEMs, signatures, and homomorphic encryption from one foundation. NIST made ML-KEM and ML-DSA its primary standards for exactly this balance.</p><p>Code-based and hash-based families serve as conservative, algorithmically diverse backups. The multivariate finalist Rainbow and the isogeny fourth-round candidate SIKE were broken outright in 2022, underscoring why diversity matters.</p>`,
 		Hybrids: `<p>A correctly constructed robust hybrid can preserve a specified security property when one component remains secure. Simply placing two algorithms together does not establish that guarantee. TLS deployments pairing X25519 with ML-KEM-768 are already widespread.</p><p>The argument depends on the combiner, authentication and downgrade protections. See the proof-wrapper dependency lesson below for a composition where changing only the signature is insufficient.</p>`,
 		'NIST categories': `<p>NIST PQC parameter sets are pinned to one of five <em>security categories</em>, each defined by the effort needed to break a specific symmetric benchmark. The definitions are in NIST\u2019s PQC Call for Proposals, \u00A74.A.5, and they are quoted below in NIST\u2019s own form.</p>${categoriesTable}<p style="margin-top:12px"><strong>Read the two columns as alternatives, not as a pair.</strong> NIST states each AES-pegged category as \u201C2^x/MAXDEPTH quantum gates <em>or</em> 2^y classical gates\u201D. MAXDEPTH is a free parameter bounding how long a serial quantum computation is plausible; NIST suggests anywhere from 2^40 (a year of currently envisioned quantum hardware) to 2^96 (an upper bound). That depth bound is why Grover does not reach the na\u00EFve 2^(n/2) here \u2014 a depth-limited Grover must be run in parallel, and parallelism buys only a square-root-of-the-parallelism saving.</p><p style="margin-top:12px">This is also where a common mix-up comes from: at MAXDEPTH = 2^96 the quantum thresholds reduce to roughly 2^74, 2^137 and 2^202, and those quotients often get printed next to the raw classical gate counts as if the two were the same metric. They are not. Always say which MAXDEPTH you assumed.</p>`,
 	};
@@ -2828,8 +2828,8 @@ function renderRemember(): HTMLElement {
       <li class="remember-item">
         <span class="remember-num">3</span>
         <div class="remember-body">
-          <p class="remember-title">Two finalist families were broken in a single year — 2022.</p>
-          <p class="panel-copy">Rainbow (multivariate) fell to Beullens's rectangular MinRank attack; SIKE (isogeny) fell to Castryck–Decru via Kani's theorem. "Post-quantum" is a moving target.</p>
+          <p class="remember-title">Two candidate families were broken in a single year — 2022.</p>
+          <p class="panel-copy">Rainbow, the multivariate third-round finalist, fell to Beullens's simple attack; SIKE, an isogeny fourth-round candidate, fell to Castryck–Decru via Kani's theorem. "Post-quantum" is a moving target.</p>
         </div>
       </li>
       <li class="remember-item">

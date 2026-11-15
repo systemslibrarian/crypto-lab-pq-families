@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	CLASSICAL_BASELINE,
 	FAMILIES,
+	GLOSSARY,
 	SECURITY_CATEGORIES,
 	TIMELINE,
 	formatBytes,
@@ -117,6 +118,54 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		expect(s.note).toMatch(/compressed decapsulation key \(now the default/);
 	});
 
+	// SQIsign specification version 3.0 (1 September 2026, the Round-3 submission),
+	// Table 12: NIST-I is 83 / 270 / 200 bytes. The row previously carried the
+	// Round-1 figures (64 / 16 / 177), which no current specification prints.
+	it('SQIsign level I matches the Round-3 specification', () => {
+		const s = findScheme('SQIsign');
+		expect(s.standard).toMatch(/Round 3/);
+		expect(s.pubKey).toBe(83);
+		expect(s.secretKey).toBe(270);
+		expect(s.output).toBe(200); // signature
+	});
+
+	// uov-Ip (n, m, q) = (112, 44, 256), so v = n - m = 68 and the expanded secret
+	// key esk = (seed_sk, O, {Pi(1), Si}) measures
+	//   32 + 68*44 + 44*(68*69/2) + 44*(68*44)
+	//   = 32 + 2,992 + 103,224 + 131,648 = 237,896 B,
+	// which is also the figure in the UOV specification's own size table. 237,912
+	// is not any specification's value.
+	it('uov-Ip expanded secret key agrees with the size formula', () => {
+		const v = 112 - 44;
+		const m = 44;
+		const esk = 32 + v * m + m * ((v * (v + 1)) / 2) + m * (v * m);
+		expect(esk).toBe(237896);
+		expect(findScheme('UOV (ov-Ip)').secretKey).toBe(esk);
+		// The expanded public key is the same arithmetic over n: m * n(n+1)/2.
+		expect(findScheme('UOV (ov-Ip)').pubKey).toBe(m * ((112 * 113) / 2));
+	});
+
+	// The round label and the numbers have to travel together. These are the
+	// Round-2 figures (specification version 2.0, February 2025); the Round-3
+	// submission moves uov-Ip to (119, 45): 321,300 / 278,087 / 135 B. Labelling
+	// the row "Round 3" while printing (112, 44) sizes is how it drifted before,
+	// so the label is pinned to the parameter set it actually describes, and the
+	// note must still say UOV is a live Round-3 candidate and what Round 3 gives.
+	it('the UOV row labels the round its sizes come from', () => {
+		const s = findScheme('UOV (ov-Ip)');
+		expect(s.standard).toBe('Additional-signature Round 2 sizes');
+		expect(s.pubKey).toBe(278432);
+		expect(s.output).toBe(128); // signature
+		expect(s.note).toMatch(/Round-2 specification \(version 2\.0, February 2025\)/);
+		expect(s.note).toMatch(/still in NIST\u2019s additional-signature Round 3/);
+		expect(s.note).toMatch(/\(119, 45\)/);
+		expect(s.note).toMatch(/321,300 B/);
+		expect(s.note).toMatch(/278,087 B/);
+		expect(s.note).toMatch(/135 B/);
+		// SQIsign's row, by contrast, does print its Round-3 specification sizes.
+		expect(findScheme('SQIsign').standard).toBe('Additional-signature Round 3 candidate');
+	});
+
 	// Classical baseline dwarfed by every PQC scheme.
 	it('X25519 + ECDSA P-256 baseline', () => {
 		expect(CLASSICAL_BASELINE.kemPub).toBe(32);
@@ -221,5 +270,87 @@ describe('formatBytes', () => {
 		expect(formatBytes(96)).toMatch(/96/);
 		// 261,120 B is the McEliece public key — should read in KB.
 		expect(formatBytes(261120)).toMatch(/KB|kB/i);
+	});
+});
+
+// =====================================================================
+// Statements checked against their primary sources on 15 November 2026. Each of
+// these shipped a figure or a citation that the source contradicts, so each one
+// gets an assertion rather than a second chance to drift.
+// =====================================================================
+describe('figures agree with the prose beside them', () => {
+	// ~150M cycles is about 0.05 s at 3 GHz. "Takes seconds" was off by ~20x
+	// against the cycle count printed directly under it.
+	it('Classic McEliece key generation is milliseconds, not seconds', () => {
+		const s = findScheme('Classic McEliece 348864');
+		expect(s.cyclesNote).toMatch(/150M/);
+		expect(s.performance).toMatch(/tens of milliseconds/);
+		expect(s.performance).not.toMatch(/takes seconds/);
+	});
+
+	// The Kyber team's own table (pq-crystals.org/kyber): Kyber-768 AVX2 on an
+	// Intel Core-i7 4770K (Haswell) is 52,732 / 67,624 / 53,156 cycles. The
+	// previous 14k / 17k / 21k had no source and named the wrong platform.
+	it('ML-KEM-768 cycle counts name the Kyber team AVX2 table and its platform', () => {
+		const s = findScheme('ML-KEM-768 (Kyber)');
+		expect(s.cyclesNote).toMatch(/53k/);
+		expect(s.cyclesNote).toMatch(/68k/);
+		expect(s.cyclesNote).toMatch(/Haswell/);
+		expect(s.cyclesNote).not.toMatch(/14k|Skylake/);
+	});
+});
+
+describe('attributions name the right paper and venue', () => {
+	// ePrint 2022/214 calls its own result the simple attack (section 3) and
+	// credits the rectangular MinRank attack to ePrint 2020/1343 (Eurocrypt 2021).
+	it('Rainbow\u2019s weekend break is the simple attack, not rectangular MinRank', () => {
+		const multivariate = FAMILIES.find((f) => f.id === 'multivariate')!;
+		const rainbow = findScheme('Rainbow (Ia)');
+		expect(rainbow.note).toMatch(/simple attack/);
+		expect(rainbow.note).not.toMatch(/rectangular MinRank/);
+
+		const attack = multivariate.attacks.find((a) => a.name.includes('Beullens'))!;
+		expect(attack.summary).toMatch(/simple attack/);
+		expect(attack.summary).toMatch(/earlier 2021 result/);
+	});
+
+	// IACR TCHES 2025(2):209-234, doi:10.46586/tches.v2025.i2.209-234.
+	it('KyberSlash cites its TCHES 2025 publication', () => {
+		const lattice = FAMILIES.find((f) => f.id === 'lattice')!;
+		const kyberslash = lattice.attacks.find((a) => a.name === 'KyberSlash')!;
+		expect(kyberslash.venue).toMatch(/TCHES 2025\(2\):209/);
+		expect(kyberslash.venue).not.toMatch(/no peer-reviewed venue/);
+	});
+
+	// ePrint 2013/506 is Rauzy and Guilley on CRT-RSA fault countermeasures. The
+	// Delfs-Galbraith preprint is arXiv:1310.7789, which Sources already links.
+	it('Delfs\u2013Galbraith cites the arXiv preprint, not ePrint 2013/506', () => {
+		const isogeny = FAMILIES.find((f) => f.id === 'isogeny')!;
+		const dg = isogeny.attacks.find((a) => a.name.includes('Delfs'))!;
+		expect(dg.summary).toMatch(/arXiv:1310\.7789/);
+		expect(dg.summary).not.toMatch(/2013\/506/);
+		expect(
+			isogeny.references.some((r) => r.url?.includes('1310.7789')),
+		).toBe(true);
+	});
+
+	// IACR CryptoDB lists "Mitigating Multi-target Attacks in Hash-Based
+	// Signatures" (Hulsing, Rijneveld, Song) in the PKC 2016 program; the preprint
+	// is ePrint 2015/1256. The entry was dated 2020, which is no edition of it.
+	it('the multi-target analysis is dated to its PKC 2016 venue', () => {
+		const hash = FAMILIES.find((f) => f.id === 'hash')!;
+		const attack = hash.attacks.find((a) => a.name === 'WOTS+ multi-target analysis')!;
+		expect(attack.year).toBe(2016);
+		expect(attack.venue).toMatch(/PKC 2016/);
+		expect(
+			hash.references.some((r) => r.year === 2016 && r.url === 'https://eprint.iacr.org/2015/1256'),
+		).toBe(true);
+	});
+
+	// NIST IR 8545, released March 2025, closed the fourth round by selecting HQC.
+	it('the glossary dates the four rounds to 2016-2025', () => {
+		const entry = GLOSSARY.find((g) => g.term.includes('NIST PQC rounds'))!;
+		expect(entry.def).toMatch(/2016\u20132025/);
+		expect(entry.def).not.toMatch(/2016\u20132024/);
 	});
 });

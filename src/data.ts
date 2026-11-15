@@ -106,7 +106,7 @@ export const FAMILIES: Family[] = [
 				maturity: 'standardized',
 				securityCategory: 3,
 				performance: 'Microsecond-class keygen / encap / decap on commodity CPUs.',
-				cyclesNote: 'keygen ≈ 14k · encap ≈ 17k · decap ≈ 21k cycles (AVX2 ref, Skylake)',
+				cyclesNote: 'keygen ≈ 53k · encap ≈ 68k · decap ≈ 53k cycles (Kyber team AVX2, Haswell Core-i7 4770K)',
 				note: 'NIST primary KEM. Built on Module-LWE over R_q = Z_q[x]/(x^256 + 1) with q = 3329, dimension k = 3.',
 			},
 			{
@@ -177,7 +177,7 @@ export const FAMILIES: Family[] = [
 			{
 				year: 2023,
 				name: 'KyberSlash',
-				venue: 'Coordinated disclosure, 2023 (no peer-reviewed venue)',
+				venue: 'Coordinated disclosure 2023; published as IACR TCHES 2025(2):209–234',
 				summary: 'Constant-time bug in Kyber’s ciphertext compression leaked secret bits through cycle counts. Patched in all major implementations within months of disclosure.',
 			},
 			{
@@ -266,7 +266,7 @@ export const FAMILIES: Family[] = [
 				outputLabel: 'ciphertext',
 				maturity: 'research',
 				securityCategory: 1,
-				performance: 'Encap and decap are fast; key generation takes seconds (computing a Goppa-code support).',
+				performance: 'Encap and decap are fast; key generation is far slower — tens of milliseconds at the cycle count below, not seconds (computing a Goppa-code support).',
 				cyclesNote: 'keygen ≈ 150M · encap ≈ 50k · decap ≈ 150k cycles (ref impl, Skylake)',
 				note: 'Niederreiter-style KEM over a binary Goppa code. Huge public key, tiny ciphertext; structural estimates are below generic ISD work factors, without a practical production-key recovery.',
 			},
@@ -463,8 +463,9 @@ export const FAMILIES: Family[] = [
 				summary: 'k-list birthday attack against FORS-like few-time signatures; SPHINCS+ FORS parameters are sized to absorb it.',
 			},
 			{
-				year: 2020,
+				year: 2016,
 				name: 'WOTS+ multi-target analysis',
+				venue: 'PKC 2016 (preprint ePrint 2015/1256)',
 				summary: 'Tight multi-user / multi-target bounds (Hülsing–Rijneveld–Song) that shaped SPHINCS+ parameter choices.',
 			},
 			{
@@ -491,6 +492,13 @@ export const FAMILIES: Family[] = [
 				year: 1989,
 				title: 'A certified digital signature',
 				venue: 'Crypto 1989',
+			},
+			{
+				authors: 'Hülsing, Rijneveld, Song',
+				year: 2016,
+				title: 'Mitigating multi-target attacks in hash-based signatures',
+				venue: 'PKC 2016; preprint ePrint 2015/1256',
+				url: 'https://eprint.iacr.org/2015/1256',
 			},
 			{
 				authors: 'Bernstein et al.',
@@ -565,21 +573,21 @@ export const FAMILIES: Family[] = [
 				securityCategory: 1,
 				performance: 'Verification very fast; signing fast. Broken \u2014 not deployable. Shown here for cryptanalytic history.',
 				cyclesNote: 'keygen \u2248 30M \u00b7 sign \u2248 50k \u00b7 verify \u2248 30k cycles (pre-break ref impl, Skylake)',
-				note: 'Layered Oil-and-Vinegar trapdoor; Beullens\u2019s 2022 rectangular MinRank attack recovers the secret key in a weekend on a laptop.',
+				note: 'Layered Oil-and-Vinegar trapdoor; Beullens\u2019s 2022 simple attack recovers the secret key in a weekend on a laptop.',
 			},
 			{
 				name: 'UOV (ov-Ip)',
-				standard: 'Additional-signature Round 3 candidate',
+				standard: 'Additional-signature Round 2 sizes',
 				kind: 'Signature',
 				pubKey: 278432,
-				secretKey: 237912,
+				secretKey: 237896,
 				output: 128,
 				outputLabel: 'signature',
 				maturity: 'research',
 				securityCategory: 1,
 				performance: 'Very fast signing and verification; key generation also fast. Bandwidth dominated by the public key.',
 				cyclesNote: 'keygen \u2248 1M \u00b7 sign \u2248 50k \u00b7 verify \u2248 50k cycles (ref impl, Skylake)',
-				note: 'Unbalanced Oil-and-Vinegar (Kipnis\u2013Patarin\u2013Goubin, 1999) \u2014 one of several multivariate proposals still in NIST\u2019s additional-signature Round 3.',
+				note: 'Unbalanced Oil-and-Vinegar (Kipnis\u2013Patarin\u2013Goubin, 1999) \u2014 one of several multivariate proposals still in NIST\u2019s additional-signature Round 3. These are the uov-Ip sizes from the Round-2 specification (version 2.0, February 2025); the Round-3 submission (version 3.0) moves uov-Ip to (119, 45) over F256, with a 321,300 B expanded public key, a 278,087 B expanded secret key and a 135 B signature.',
 			},
 		],
 		mathProblem:
@@ -605,7 +613,7 @@ export const FAMILIES: Family[] = [
 			{
 				year: 2022,
 				name: 'Beullens: Rainbow key recovery',
-				summary: 'Rectangular MinRank attack recovers Rainbow Ia keys in a weekend on a single laptop \u2014 ended the Rainbow finalist.',
+				summary: 'The \u201csimple attack\u201d of ePrint 2022/214 recovers Rainbow Ia (SL 1, second-round) keys in about 53 hours \u2014 one weekend \u2014 on a single laptop; Beullens\u2019s rectangular MinRank attack is his earlier 2021 result. Ended the Rainbow finalist.',
 			},
 			{
 				year: 2026,
@@ -658,6 +666,13 @@ export const FAMILIES: Family[] = [
 				title: 'Round 3 additional signatures: UOV and other multivariate candidates',
 				url: 'https://csrc.nist.gov/projects/pqc-dig-sig/round-3-additional-signatures',
 			},
+			{
+				authors: 'Beullens, Chen, Ding, Gong, Kannwischer, Patarin, Peng, Schmidt, Shih, Tao, Yang',
+				year: 2025,
+				title: 'UOV: Unbalanced Oil and Vinegar, specification version 2.0',
+				venue: 'Additional-signature Round 2 submission, February 2025 \u2014 the source of the ov-Ip sizes above',
+				url: 'https://csrc.nist.gov/csrc/media/Projects/pqc-dig-sig/documents/round-2/spec-files/uov-spec-round2-web.pdf',
+			},
 		],
 	},
 	{
@@ -699,9 +714,9 @@ export const FAMILIES: Family[] = [
 				name: 'SQIsign',
 				standard: 'Additional-signature Round 3 candidate',
 				kind: 'Signature',
-				pubKey: 64,
-				secretKey: 16,
-				output: 177,
+				pubKey: 83,
+				secretKey: 270,
+				output: 200,
 				outputLabel: 'signature',
 				maturity: 'research',
 				securityCategory: 1,
@@ -743,7 +758,7 @@ export const FAMILIES: Family[] = [
 				year: 2016,
 				name: 'Delfs\u2013Galbraith supersingular path finding',
 				venue: 'Designs, Codes and Cryptography 78 (2016)',
-				summary: 'The cited paper distinguishes full-graph search Õ(p^(1/2)) from its special F_p algorithm Õ(p^(1/4)); both are exponential in log₂(p). Circulated as ePrint 2013/506; the peer-reviewed version is the 2016 journal article. No current-best-algorithm survey is claimed.',
+				summary: 'The cited paper distinguishes full-graph search Õ(p^(1/2)) from its special F_p algorithm Õ(p^(1/4)); both are exponential in log₂(p). Circulated as arXiv:1310.7789 (2013); the peer-reviewed version is the 2016 journal article. No current-best-algorithm survey is claimed.',
 			},
 			{
 				year: 2016,
@@ -1069,7 +1084,7 @@ export const GLOSSARY: GlossaryEntry[] = [
 	},
 	{
 		term: 'NIST PQC rounds & FIPS 203/204/205',
-		def: 'NIST’s post-quantum standardisation ran four rounds (2016–2024). FIPS 203 = ML-KEM (Kyber). FIPS 204 = ML-DSA (Dilithium). FIPS 205 = SLH-DSA (SPHINCS+). Falcon is being standardised as FIPS 206 / FN-DSA; HQC was selected in 2025; additional signatures are being evaluated in an on-ramp.',
+		def: 'NIST’s post-quantum standardisation ran four rounds (2016–2025). FIPS 203 = ML-KEM (Kyber). FIPS 204 = ML-DSA (Dilithium). FIPS 205 = SLH-DSA (SPHINCS+). Falcon is being standardised as FIPS 206 / FN-DSA; HQC was selected in 2025; additional signatures are being evaluated in an on-ramp.',
 	},
 ];
 
