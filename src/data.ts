@@ -618,12 +618,25 @@ export const FAMILIES: Family[] = [
 			},
 			{
 				year: 2026,
+				name: 'Li–Tao: extended Schur–Macaulay attacks',
+				venue: 'ePrint 2026/2444; preprint revised 16 November 2026',
+				summary: 'Lower attack-cost estimates for selected additional Round-3 MAYO parameter sets rely on conjectural Hilbert-series and structured-rank predictions. This is not demonstrated production-key recovery, and the estimates do not establish the security of historical Round-2 sets or tiny teaching keys. This browser does not execute the attack. See the Schur–Macaulay paper in Sources.',
+			},
+			{
+				year: 2026,
 				name: 'Li–Tao: divided-power wedge attacks on UOV',
 				venue: 'ePrint 2026/2272; preprint revised 14 November 2026',
 				summary: 'Conditional structural-attack estimates for selected Round-3 UOV parameters depend on conjectural Hilbert-series predictions, supported by small-instance experiments. This is not demonstrated production-key recovery. The paper uses different parameters from the older ov-Ip comparison row above: do not transfer its estimates to that row. This browser does not execute the attack. See Li and Tao in Sources.',
 			},
 		],
 		references: [
+			{
+				authors: 'Peigen Li, Siyong Tao',
+				year: 2026,
+				title: 'Extending the Schur–Macaulay Framework for UOV Attacks via Truncated Polynomial Algebras',
+				venue: 'ePrint 2026/2444; preprint revised 16 November 2026',
+				url: 'https://eprint.iacr.org/2026/2444',
+			},
 			{
 				authors: 'Peigen Li, Siyong Tao',
 				year: 2026,
