@@ -42,6 +42,59 @@ test('OpenSSL ships ML-KEM, ML-DSA and SLH-DSA rather than flagging them', async
   await expect(footnote).toContainText('ML-KEM, ML-DSA and SLH-DSA');
 });
 
+/**
+ * Standards reviewed 15 November 2026. Every cell in the OpenSSL column is held
+ * to a line in OpenSSL's own documentation; oqs-provider is a third party and
+ * does not count as OpenSSL support. Sources:
+ *   - openssl-library.org/news/openssl-3.5-notes - 3.5.0 [8 Apr 2025],
+ *     "Support for PQC algorithms (ML-KEM, ML-DSA and SLH-DSA)"
+ *   - openssl-library.org/news/openssl-3.6-notes - 3.6.0 [1 Oct 2025],
+ *     "Added LMS signature verification support as per SP 800-208"
+ *   - docs.openssl.org/4.1/man7/OSSL_PROVIDER-default - the algorithm list,
+ *     which has no Falcon/FN-DSA, HQC, BIKE, Classic McEliece or XMSS entry
+ *   - docs.openssl.org/4.1/man7/EVP_SIGNATURE-LMS - "The OpenSSL providers only
+ *     support LMS signature verification" and "LMS support is disabled by
+ *     default at compile-time. To enable, specify the enable-lms build
+ *     configuration option."
+ */
+test('the OpenSSL column is versioned and carries no unsourced support', async ({ page }) => {
+  await page.goto('.');
+  const header = page.locator('#section-impl .impl-table thead th').nth(2);
+  // "3.x" spanned releases that have none of these algorithms; the column names
+  // the release actually checked.
+  await expect(header).toHaveText('OpenSSL 4.1');
+  await expect(page.locator('#section-impl .impl-table thead')).not.toContainText('OpenSSL 3.x');
+
+  // Nothing OpenSSL's own documentation does not list. Falcon-512 carried an
+  // "experimental" mark that rested on oqs-provider alone.
+  for (const scheme of ['Falcon-512 (FN-DSA)', 'HQC-128', 'Classic McEliece', 'BIKE']) {
+    const row = page.locator('#section-impl .impl-table tbody tr').filter({ hasText: scheme });
+    await expect(row.locator('td.impl-cell').nth(1).locator('.impl-glyph')).toHaveAttribute(
+      'title',
+      '\u2014',
+    );
+  }
+
+  // LMS is real but behind enable-lms, and it is verification only, and XMSS is
+  // not there at all - which one glyph on a row named for two schemes cannot
+  // say, so the footnote has to.
+  const stateful = page
+    .locator('#section-impl .impl-table tbody tr')
+    .filter({ hasText: 'XMSS / LMS (stateful)' });
+  await expect(stateful.locator('td.impl-cell').nth(1).locator('.impl-glyph')).toHaveAttribute(
+    'title',
+    'experimental',
+  );
+  const footnote = page.locator('#section-impl .impl-footnote');
+  await expect(footnote).toContainText('reviewed 15 November 2026');
+  await expect(footnote).toContainText('3.6.0 (1 October 2025)');
+  await expect(footnote).toContainText('LMS signature verification support as per SP 800-208');
+  await expect(footnote).toContainText('only LMS, only');
+  await expect(footnote).toContainText('enable-lms');
+  await expect(footnote).toContainText('disabled by default at compile-time');
+  await expect(footnote).toContainText('not OpenSSL');
+});
+
 test('SIKE is named a fourth-round candidate and Rainbow the finalist', async ({ page }) => {
   await page.goto('.');
   // NIST IR 8545 section 2.1: of the four fourth-round KEMs only Classic

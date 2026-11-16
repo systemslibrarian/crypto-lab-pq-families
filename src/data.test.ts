@@ -354,3 +354,84 @@ describe('attributions name the right paper and venue', () => {
 		expect(entry.def).not.toMatch(/2016\u20132024/);
 	});
 });
+
+// =====================================================================
+// Standards reviewed 15 November 2026 — the additional-signatures Round 3 and
+// the SQIsign performance figures. Both are claims rather than computed values,
+// so these assertions are the only thing that can catch them drifting back.
+// =====================================================================
+describe('additional-signature Round 3 is dated to its primary source', () => {
+	// NIST IR 8610 (May 2026), "Status Report on the Second Round of the
+	// Additional Digital Signature Schemes": "The second round began on
+	// October 24, 2024, and continued until May 14, 2026", and NIST "selected
+	// nine candidate algorithms to move forward to the third round". Every place
+	// this lab gives a scheme's CURRENT status has to carry that date, because
+	// "Round 3" alone has meant three different things over three years.
+	it('every current-status statement names 14 May 2026 and NIST IR 8610', () => {
+		const multivariate = FAMILIES.find((f) => f.id === 'multivariate')!;
+		const isogeny = FAMILIES.find((f) => f.id === 'isogeny')!;
+		for (const text of [
+			multivariate.summary,
+			isogeny.summary,
+			findScheme('UOV (ov-Ip)').note!,
+			findScheme('SQIsign').note!,
+			GLOSSARY.find((g) => g.term.includes('NIST PQC rounds'))!.def,
+		]) {
+			expect(text).toMatch(/14 May 2026/);
+			expect(text).toMatch(/IR 8610/);
+		}
+	});
+
+	it('cites IR 8610 itself in both families that have a Round-3 candidate', () => {
+		for (const id of ['multivariate', 'isogeny']) {
+			const fam = FAMILIES.find((f) => f.id === id)!;
+			expect(fam.references.some((r) => r.url === 'https://doi.org/10.6028/NIST.IR.8610')).toBe(true);
+		}
+	});
+
+	// Round 3 dates the PROCESS, not the parameters: UOV still prints its
+	// Round-2 sizes and still says so. Advancing the label without the numbers
+	// is the drift this pins against.
+	it('dating Round 3 does not relabel the UOV parameter set', () => {
+		expect(findScheme('UOV (ov-Ip)').standard).toBe('Additional-signature Round 2 sizes');
+	});
+});
+
+describe('SQIsign timings come from the current specification', () => {
+	// SQIsign specification version 3.0 (1 September 2026, the Round-3
+	// submission), Table 13, "SQIsign performance in 10^6 CPU cycles on an Intel
+	// Core i7-13700K CPU. Results are the median of 1,000 benchmark runs."
+	// Assembly-optimized for Intel Broadwell or later, NIST-I: 32.2 / 93.9 / 12.1.
+	// Section 1.1 gives the wall clock itself: "about 27.6 ms for signing and
+	// 3.6 ms for verification on an Intel Core i7-13700K". The row used to print
+	// "keygen ~1B . sign ~2B . verify ~50M cycles (early ref impl, Skylake)" and
+	// "signing ~ seconds", which no current specification contains.
+	it('prints Table 13 NIST-I cycles with the platform the spec names', () => {
+		const s = findScheme('SQIsign');
+		expect(s.cyclesNote).toMatch(/32\.2/);
+		expect(s.cyclesNote).toMatch(/93\.9/);
+		expect(s.cyclesNote).toMatch(/12\.1/);
+		expect(s.cyclesNote).toMatch(/i7-13700K/);
+		expect(s.cyclesNote).toMatch(/v3\.0 Table 13/);
+		// The stale strings, and the round-1/round-2 comparison figures from
+		// section 1.3, must not come back in their place.
+		expect(s.cyclesNote).not.toMatch(/Skylake/);
+		expect(s.cyclesNote).not.toMatch(/1B|2B|50M/);
+		expect(s.cyclesNote).not.toMatch(/103\.0|5\.1/);
+	});
+
+	it('quotes the specification wall clock instead of "seconds"', () => {
+		const s = findScheme('SQIsign');
+		expect(s.performance).toMatch(/27\.6 ms/);
+		expect(s.performance).toMatch(/3\.6 ms/);
+		expect(s.performance).toMatch(/i7-13700K/);
+		expect(s.performance).not.toMatch(/\u2248 seconds/);
+	});
+
+	it('names the version 3.0 specification as the source of the row', () => {
+		const isogeny = FAMILIES.find((f) => f.id === 'isogeny')!;
+		expect(
+			isogeny.references.some((r) => r.url === 'https://sqisign.org/spec/sqisign-20260901.pdf'),
+		).toBe(true);
+	});
+});

@@ -1,5 +1,6 @@
 // data.ts — Post-Quantum Cryptography family comparison corpus.
-// Status reflects published FIPS 203/204/205, HQC selection, and additional-signature Round 3;
+// Status reflects published FIPS 203/204/205, HQC selection, and additional-signature Round 3,
+// which opened on 14 May 2026 when NIST advanced nine candidates (NIST IR 8610);
 // HQC sizes use the October 12, 2026 HQC team specification, not a draft FIPS 207.
 // Sizes describe representative parameter sets in exact bytes where the cited specification provides them.
 
@@ -548,7 +549,7 @@ export const FAMILIES: Family[] = [
 		maturity: 'research',
 		confidence: 25,
 		summary:
-			'A historically important signature family. Its NIST finalist Rainbow was broken in 2022 by Beullens on a laptop over a weekend; this does not break all multivariate signatures. UOV and other multivariate proposals remain in NIST\u2019s additional-signature Round 3 as research candidates, not final standards.',
+			'A historically important signature family. Its NIST finalist Rainbow was broken in 2022 by Beullens on a laptop over a weekend; this does not break all multivariate signatures. UOV and other multivariate proposals advanced to Round 3 of NIST\u2019s additional-signatures process on 14 May 2026 (NIST IR 8610) and remain research candidates there, not final standards.',
 		strengths: [
 			'Very short signatures and fast verification',
 			'Conceptually simple finite-field arithmetic',
@@ -587,7 +588,7 @@ export const FAMILIES: Family[] = [
 				securityCategory: 1,
 				performance: 'Very fast signing and verification; key generation also fast. Bandwidth dominated by the public key.',
 				cyclesNote: 'keygen \u2248 1M \u00b7 sign \u2248 50k \u00b7 verify \u2248 50k cycles (ref impl, Skylake)',
-				note: 'Unbalanced Oil-and-Vinegar (Kipnis\u2013Patarin\u2013Goubin, 1999) \u2014 one of several multivariate proposals still in NIST\u2019s additional-signature Round 3. These are the uov-Ip sizes from the Round-2 specification (version 2.0, February 2025); the Round-3 submission (version 3.0) moves uov-Ip to (119, 45) over F256, with a 321,300 B expanded public key, a 278,087 B expanded secret key and a 135 B signature.',
+				note: 'Unbalanced Oil-and-Vinegar (Kipnis\u2013Patarin\u2013Goubin, 1999) \u2014 one of several multivariate proposals still in NIST\u2019s additional-signature Round 3, which it entered on 14 May 2026 (NIST IR 8610). These are the uov-Ip sizes from the Round-2 specification (version 2.0, February 2025); the Round-3 submission (version 3.0) moves uov-Ip to (119, 45) over F256, with a 321,300 B expanded public key, a 278,087 B expanded secret key and a 135 B signature.',
 			},
 		],
 		mathProblem:
@@ -667,6 +668,13 @@ export const FAMILIES: Family[] = [
 				url: 'https://csrc.nist.gov/projects/pqc-dig-sig/round-3-additional-signatures',
 			},
 			{
+				authors: 'NIST',
+				year: 2026,
+				title: 'NIST IR 8610 \u2014 Status Report on the Second Round of the Additional Digital Signature Schemes',
+				venue: 'May 2026 \u2014 names the nine candidates advanced to Round 3 on 14 May 2026',
+				url: 'https://doi.org/10.6028/NIST.IR.8610',
+			},
+			{
 				authors: 'Beullens, Chen, Ding, Gong, Kannwischer, Patarin, Peng, Schmidt, Shih, Tao, Yang',
 				year: 2025,
 				title: 'UOV: Unbalanced Oil and Vinegar, specification version 2.0',
@@ -683,7 +691,7 @@ export const FAMILIES: Family[] = [
 		maturity: 'research',
 		confidence: 20,
 		summary:
-			'Once prized for small keys, the leading isogeny KEM SIKE was decisively broken in 2022 by the Castryck\u2013Decru attack, which recovered keys in roughly an hour. That result did not break every isogeny construction: SQIsign remains an additional-signature Round 3 research candidate, while this family has no NIST KEM candidate.',
+			'Once prized for small keys, the leading isogeny KEM SIKE was decisively broken in 2022 by the Castryck\u2013Decru attack, which recovered keys in roughly an hour. That result did not break every isogeny construction: SQIsign advanced to Round 3 of NIST\u2019s additional-signatures process on 14 May 2026 (NIST IR 8610) and remains a research candidate there, while this family has no NIST KEM candidate.',
 		strengths: [
 			'Compact keys and signatures in some schemes, including SQIsign',
 			'Elegant connection to classical elliptic-curve theory',
@@ -720,9 +728,16 @@ export const FAMILIES: Family[] = [
 				outputLabel: 'signature',
 				maturity: 'research',
 				securityCategory: 1,
-				performance: 'Verification fast; signing \u2248 seconds in the original construction; under active optimisation.',
-				cyclesNote: 'keygen \u2248 1B \u00b7 sign \u2248 2B \u00b7 verify \u2248 50M cycles (early ref impl, Skylake)',
-				note: 'Identification protocol turned signature via Fiat\u2013Shamir; relies on the Deuring correspondence between supersingular curves and quaternion orders.',
+				// Specification version 3.0 (1 September 2026), \u00a71.1 and Table 13. The row
+				// previously printed 'keygen \u2248 1B \u00b7 sign \u2248 2B \u00b7 verify \u2248 50M cycles (early ref impl,
+				// Skylake)' and 'signing \u2248 seconds', neither of which is in any current
+				// specification. These are the spec's own figures, on its own platform, not
+				// converted or rescaled: it reports cycles in Table 13 and the milliseconds
+				// itself in \u00a71.1. (Its \u00a71.3 '103.0 Mcycles / 5.1 Mcycles' describes the
+				// round-2 version against round 1 \u2014 history, not the current build.)
+				performance: 'The specification measures NIST level I at \u201cabout 27.6 ms for signing and 3.6 ms for verification on an Intel Core i7-13700K\u201d (version 3.0, \u00a71.1). Verification is the simpler and significantly faster side.',
+				cyclesNote: 'keygen 32.2 \u00b7 sign 93.9 \u00b7 verify 12.1 (\u00d710\u2076 CPU cycles at NIST-I \u2014 specification v3.0 Table 13, assembly-optimized build for Intel Broadwell or later, Intel Core i7-13700K, median of 1,000 runs)',
+				note: 'Identification protocol turned signature via Fiat\u2013Shamir; relies on the Deuring correspondence between supersingular curves and quaternion orders. NIST advanced it to Round 3 of the additional-signatures process on 14 May 2026 (NIST IR 8610); the sizes and timings above are from its Round-3 submission, specification version 3.0 (1 September 2026).',
 			},
 		],
 		mathProblem:
@@ -851,6 +866,20 @@ export const FAMILIES: Family[] = [
 				year: 2026,
 				title: 'Round 3 additional signatures: SQIsign',
 				url: 'https://csrc.nist.gov/projects/pqc-dig-sig/round-3-additional-signatures',
+			},
+			{
+				authors: 'NIST',
+				year: 2026,
+				title: 'NIST IR 8610 \u2014 Status Report on the Second Round of the Additional Digital Signature Schemes',
+				venue: 'May 2026 \u2014 names the nine candidates advanced to Round 3 on 14 May 2026',
+				url: 'https://doi.org/10.6028/NIST.IR.8610',
+			},
+			{
+				authors: 'Aardal, Adj, Aranha, Basso, Borin, Canales Mart\u00ednez, Ch\u00e1vez-Saab, Corte-Real Santos, Dartois, De Feo, Duparc, Espitau et al.',
+				year: 2026,
+				title: 'SQIsign: algorithm specifications and supporting documentation, version 3.0',
+				venue: 'Additional-signature Round 3 submission, 1 September 2026 \u2014 the source of the sizes and timings above',
+				url: 'https://sqisign.org/spec/sqisign-20260901.pdf',
 			},
 		],
 	},
@@ -1084,7 +1113,7 @@ export const GLOSSARY: GlossaryEntry[] = [
 	},
 	{
 		term: 'NIST PQC rounds & FIPS 203/204/205',
-		def: 'NIST’s post-quantum standardisation ran four rounds (2016–2025). FIPS 203 = ML-KEM (Kyber). FIPS 204 = ML-DSA (Dilithium). FIPS 205 = SLH-DSA (SPHINCS+). Falcon is being standardised as FIPS 206 / FN-DSA; HQC was selected in 2025; additional signatures are being evaluated in an on-ramp.',
+		def: 'NIST’s post-quantum standardisation ran four rounds (2016–2025). FIPS 203 = ML-KEM (Kyber). FIPS 204 = ML-DSA (Dilithium). FIPS 205 = SLH-DSA (SPHINCS+). Falcon is being standardised as FIPS 206 / FN-DSA; HQC was selected in 2025; additional signatures run in a separate on-ramp, whose Round 3 opened on 14 May 2026 when NIST advanced nine of its candidates (NIST IR 8610).',
 	},
 ];
 

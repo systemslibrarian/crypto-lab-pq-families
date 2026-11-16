@@ -1590,14 +1590,41 @@ function renderImplStatus(): HTMLElement {
 	const section = el('section', 'lab-section');
 
 	type CellState = 'ship' | 'exp' | 'planned' | 'none';
-	const LIBS = ['liboqs', 'OpenSSL 3.x', 'BoringSSL', 'BouncyCastle', 'CIRCL', 'RustCrypto'];
+	const LIBS = ['liboqs', 'OpenSSL 4.1', 'BoringSSL', 'BouncyCastle', 'CIRCL', 'RustCrypto'];
 
 	// Status approximate as of mid-2026; based on each project's published changelogs
 	// and PQC-related releases. Footnote is explicit about this snapshot semantics.
+	//
+	// Standards reviewed 15 November 2026 — the OpenSSL column (index 1) only.
+	// Every OpenSSL cell below is held to a line in OpenSSL's OWN documentation;
+	// support reachable only through the third-party oqs-provider is not OpenSSL
+	// support, so it does not earn a glyph here. The column is labelled with the
+	// version checked because "3.x" spans releases that do not have these
+	// algorithms at all: 4.1.0 and 4.0.3 are current and 3.5.9 is the LTS
+	// (https://openssl-library.org/source/).
+	//   ship  ML-KEM-768, ML-DSA-65, SLH-DSA-128f — the 4.1 default provider lists
+	//         "ML-KEM-768, see EVP_KEM-ML-KEM-768(7)" under Asymmetric Key
+	//         Encapsulation and "ML-DSA-65" / "SLH-DSA-SHA2-128f" under Asymmetric
+	//         Signature (docs.openssl.org/4.1/man7/OSSL_PROVIDER-default). They
+	//         arrived together in 3.5.0 [8 Apr 2025]: "Support for PQC algorithms
+	//         (ML-KEM, ML-DSA and SLH-DSA)" (openssl-library.org/news/openssl-3.5-notes).
+	//   exp   XMSS / LMS — 3.6.0 [1 Oct 2025] "Added LMS signature verification
+	//         support as per SP 800-208", and EVP_SIGNATURE-LMS(7) says "LMS support
+	//         is disabled by default at compile-time. To enable, specify the
+	//         enable-lms build configuration option", which is what this glyph means.
+	//         It is LMS only, verification only — the footnote says so, because one
+	//         glyph on a row named for two schemes cannot. Splitting the row would
+	//         need sourced values for five other libraries, so the disclosure
+	//         carries it instead of a silently wrong mark.
+	//   none  Falcon / FN-DSA, HQC, BIKE, Classic McEliece — absent from the 4.1
+	//         default-provider algorithm list, which enumerates what that provider
+	//         supports. Falcon was marked "experimental" here on oqs-provider's
+	//         strength; OpenSSL's documentation does not mention it, so the mark is
+	//         removed rather than kept on a third party's evidence.
 	const rows: { scheme: string; cells: CellState[] }[] = [
 		{ scheme: 'ML-KEM-768', cells: ['ship', 'ship', 'ship', 'ship', 'ship', 'ship'] },
 		{ scheme: 'ML-DSA-65', cells: ['ship', 'ship', 'exp', 'ship', 'ship', 'exp'] },
-		{ scheme: 'Falcon-512 (FN-DSA)', cells: ['ship', 'exp', 'none', 'ship', 'none', 'planned'] },
+		{ scheme: 'Falcon-512 (FN-DSA)', cells: ['ship', 'none', 'none', 'ship', 'none', 'planned'] },
 		{ scheme: 'SLH-DSA-128f (SPHINCS+)', cells: ['ship', 'ship', 'none', 'ship', 'none', 'exp'] },
 		{ scheme: 'HQC-128', cells: ['ship', 'none', 'none', 'exp', 'none', 'planned'] },
 		{ scheme: 'Classic McEliece', cells: ['ship', 'none', 'none', 'exp', 'none', 'planned'] },
@@ -1634,7 +1661,8 @@ function renderImplStatus(): HTMLElement {
         <h2>Where Each Scheme Actually Ships</h2>
         <p class="section-footnote">
           Approximate status as of mid-2026 — check each library's current changelog before
-          depending on these. <span class="impl-key"><span class="impl-glyph impl-ship">✓</span> shipped ·
+          depending on these. The OpenSSL column was checked against OpenSSL's own documentation
+          on 15 November 2026; see the note below the table. <span class="impl-key"><span class="impl-glyph impl-ship">✓</span> shipped ·
           <span class="impl-glyph impl-exp">◔</span> experimental / behind a flag ·
           <span class="impl-glyph impl-planned">·</span> planned ·
           <span class="impl-glyph impl-none">—</span> not yet</span>
@@ -1651,8 +1679,16 @@ function renderImplStatus(): HTMLElement {
       </table>
     </div>
     <p class="section-footnote impl-footnote">
-      OpenSSL 3.5.0 (8 April 2025) added ML-KEM, ML-DSA and SLH-DSA; BoringSSL has shipped X25519+ML-KEM-768 hybrids
-      since 2023. liboqs and the OQS provider are the most complete reference. For Java/.NET,
+      <strong>OpenSSL column reviewed 15 November 2026</strong> against OpenSSL's own release notes and
+      man pages. OpenSSL 3.5.0 (8 April 2025) added ML-KEM, ML-DSA and SLH-DSA, and 3.6.0 (1 October 2025)
+      &ldquo;Added LMS signature verification support as per SP 800-208&rdquo;; the OpenSSL 4.1 default provider
+      lists all three plus LMS. It lists no Falcon / FN-DSA, HQC, BIKE, Classic McEliece or XMSS, so those cells
+      read &ldquo;not yet&rdquo; — a scheme you can only reach through the third-party OQS provider is not OpenSSL
+      support, and the Falcon mark that rested on it has been removed. The stateful row carries a half-truth no
+      single glyph can: of XMSS and LMS, OpenSSL implements only LMS, only <em>verification</em>
+      (&ldquo;The OpenSSL providers only support LMS signature verification&rdquo;), and only in a build configured
+      with <code>enable-lms</code>, which is &ldquo;disabled by default at compile-time&rdquo;. BoringSSL has shipped
+      X25519+ML-KEM-768 hybrids since 2023. liboqs and the OQS provider are the most complete reference. For Java/.NET,
       BouncyCastle has the broadest direct support. <a href="https://openquantumsafe.org" target="_blank" rel="noopener noreferrer">openquantumsafe.org</a>
       tracks current status with version numbers.
     </p>
