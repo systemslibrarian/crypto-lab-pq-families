@@ -140,9 +140,9 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		const m = 44;
 		const esk = 32 + v * m + m * ((v * (v + 1)) / 2) + m * (v * m);
 		expect(esk).toBe(237896);
-		expect(findScheme('UOV (ov-Ip)').secretKey).toBe(esk);
+		expect(findScheme('UOV (uov-Ip)').secretKey).toBe(esk);
 		// The expanded public key is the same arithmetic over n: m * n(n+1)/2.
-		expect(findScheme('UOV (ov-Ip)').pubKey).toBe(m * ((112 * 113) / 2));
+		expect(findScheme('UOV (uov-Ip)').pubKey).toBe(m * ((112 * 113) / 2));
 	});
 
 	// The round label and the numbers have to travel together. These are the
@@ -152,7 +152,7 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 	// so the label is pinned to the parameter set it actually describes, and the
 	// note must still say UOV is a live Round-3 candidate and what Round 3 gives.
 	it('the UOV row labels the round its sizes come from', () => {
-		const s = findScheme('UOV (ov-Ip)');
+		const s = findScheme('UOV (uov-Ip)');
 		expect(s.standard).toBe('Additional-signature Round 2 sizes');
 		expect(s.pubKey).toBe(278432);
 		expect(s.output).toBe(128); // signature
@@ -197,7 +197,7 @@ it('keeps family maturity distinct from broken individual schemes', () => {
 	expect(isogeny.maturity).toBe('research');
 	expect(findScheme('Rainbow (Ia)').maturity).toBe('broken');
 	expect(findScheme('SIKEp434').maturity).toBe('broken');
-	expect(findScheme('UOV (ov-Ip)').maturity).toBe('research');
+	expect(findScheme('UOV (uov-Ip)').maturity).toBe('research');
 	expect(findScheme('SQIsign').maturity).toBe('research');
 	expect(code.references.some((r) => r.url === 'https://pqc-hqc.org/doc/hqc_specifications_2026_10_12.pdf')).toBe(true);
 });
@@ -373,7 +373,7 @@ describe('additional-signature Round 3 is dated to its primary source', () => {
 		for (const text of [
 			multivariate.summary,
 			isogeny.summary,
-			findScheme('UOV (ov-Ip)').note!,
+			findScheme('UOV (uov-Ip)').note!,
 			findScheme('SQIsign').note!,
 			GLOSSARY.find((g) => g.term.includes('NIST PQC rounds'))!.def,
 		]) {
@@ -393,7 +393,7 @@ describe('additional-signature Round 3 is dated to its primary source', () => {
 	// Round-2 sizes and still says so. Advancing the label without the numbers
 	// is the drift this pins against.
 	it('dating Round 3 does not relabel the UOV parameter set', () => {
-		expect(findScheme('UOV (ov-Ip)').standard).toBe('Additional-signature Round 2 sizes');
+		expect(findScheme('UOV (uov-Ip)').standard).toBe('Additional-signature Round 2 sizes');
 	});
 });
 

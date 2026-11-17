@@ -577,7 +577,7 @@ export const FAMILIES: Family[] = [
 				note: 'Layered Oil-and-Vinegar trapdoor; Beullens\u2019s 2022 simple attack recovers the secret key in a weekend on a laptop.',
 			},
 			{
-				name: 'UOV (ov-Ip)',
+				name: 'UOV (uov-Ip)',
 				standard: 'Additional-signature Round 2 sizes',
 				kind: 'Signature',
 				pubKey: 278432,
@@ -626,7 +626,7 @@ export const FAMILIES: Family[] = [
 				year: 2026,
 				name: 'Li–Tao: divided-power wedge attacks on UOV',
 				venue: 'ePrint 2026/2272; preprint revised 14 November 2026',
-				summary: 'Conditional structural-attack estimates for selected Round-3 UOV parameters depend on conjectural Hilbert-series predictions, supported by small-instance experiments. This is not demonstrated production-key recovery. The paper uses different parameters from the older ov-Ip comparison row above: do not transfer its estimates to that row. This browser does not execute the attack. See Li and Tao in Sources.',
+				summary: 'Conditional structural-attack estimates for selected Round-3 UOV parameters depend on conjectural Hilbert-series predictions, supported by small-instance experiments. This is not demonstrated production-key recovery. The paper uses different parameters from the older uov-Ip comparison row above: do not transfer its estimates to that row. This browser does not execute the attack. See Li and Tao in Sources.',
 			},
 		],
 		references: [
@@ -691,7 +691,7 @@ export const FAMILIES: Family[] = [
 				authors: 'Beullens, Chen, Ding, Gong, Kannwischer, Patarin, Peng, Schmidt, Shih, Tao, Yang',
 				year: 2025,
 				title: 'UOV: Unbalanced Oil and Vinegar, specification version 2.0',
-				venue: 'Additional-signature Round 2 submission, February 2025 \u2014 the source of the ov-Ip sizes above',
+				venue: 'Additional-signature Round 2 submission, February 2025 \u2014 the source of the uov-Ip sizes above',
 				url: 'https://csrc.nist.gov/csrc/media/Projects/pqc-dig-sig/documents/round-2/spec-files/uov-spec-round2-web.pdf',
 			},
 		],
