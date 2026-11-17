@@ -154,6 +154,12 @@ export const FAMILIES: Family[] = [
 		attacks: [
 			{
 				year: 2026,
+				name: 'Falcon single-trace key-expansion leakage',
+				venue: 'ePrint 2025/2159, revised 16 November 2026; accepted to TCHES 2027',
+				summary: 'Li, Ma, Dou and Guo report complete key recovery from one power trace on PQClean Falcon-512 sign_dyn on ARM Cortex-M4 at -O0, -Os and -O3. In their separate optimized assembly experiment, ten traces recovered 53 of 100 test keys. The leakage occurs during secret-key expansion, before Gaussian sampling. These measured results require physical power observation of the evaluated implementations; they do not establish a mathematical break of Falcon or FN-DSA, or a vulnerability in this browser build. This lab does not reproduce the hardware attack.',
+			},
+			{
+				year: 2026,
 				name: 'Keyber: faulted ML-KEM key generation',
 				venue: 'ePrint 2026/2766 (November 4; preprint, physical-fault attack)',
 				summary: 'Kumar et al. report end-to-end ML-KEM-512 secret-key recovery on ARM Cortex-M4 after one physical overclock fault during key generation and subsequent decapsulation queries using the faulty public key. Other parameter sets are analyzed, but the physical demonstration is for 512. This is conditional on device fault access and a decapsulation oracle, not a public-key-only break of Module-LWE.',
@@ -188,6 +194,13 @@ export const FAMILIES: Family[] = [
 			},
 		],
 		references: [
+			{
+				authors: 'Li, Ma, Dou, Guo',
+				year: 2025,
+				title: 'One Fell Swoop: A Single-Trace Key-Recovery Attack on the Falcon Signing Algorithm (revised 16 November 2026)',
+				venue: 'ePrint 2025/2159; accepted to TCHES 2027',
+				url: 'https://eprint.iacr.org/2025/2159',
+			},
 			{
 				authors: 'Kumar, Ram, Kundu, Saha',
 				year: 2026,
