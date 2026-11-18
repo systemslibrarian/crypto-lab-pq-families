@@ -639,7 +639,7 @@ export const FAMILIES: Family[] = [
 				year: 2026,
 				name: 'Li–Tao: divided-power wedge attacks on UOV',
 				venue: 'ePrint 2026/2272; preprint revised 14 November 2026',
-				summary: 'Conditional structural-attack estimates for selected Round-3 UOV parameters depend on conjectural Hilbert-series predictions, supported by small-instance experiments. This is not demonstrated production-key recovery. The paper uses different parameters from the older uov-Ip comparison row above: do not transfer its estimates to that row. This browser does not execute the attack. See Li and Tao in Sources.',
+				summary: 'Conditional structural-attack estimates for selected Round-3 UOV parameters depend on conjectural Hilbert-series predictions, supported by small-instance experiments. This is not demonstrated production-key recovery. The paper’s parameter sets are not established here to be this uov-Ip comparison row’s: do not transfer its estimates to that row. This browser does not execute the attack. See Li and Tao in Sources.',
 			},
 		],
 		references: [
