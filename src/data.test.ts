@@ -129,34 +129,40 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		expect(s.output).toBe(200); // signature
 	});
 
-	// uov-Ip (n, m, q) = (112, 44, 256), so v = n - m = 68 and the expanded secret
-	// key esk = (seed_sk, O, {Pi(1), Si}) measures
-	//   32 + 68*44 + 44*(68*69/2) + 44*(68*44)
-	//   = 32 + 2,992 + 103,224 + 131,648 = 237,896 B,
-	// which is also the figure in the UOV specification's own size table. 237,912
-	// is not any specification's value.
+	// uov-Ip (n, m, q) = (119, 45, 256) in the Round-3 specification (version 3.0,
+	// 30 August 2026) Table 1, so v = n - m = 74 and the expanded secret key
+	// esk = (seed_sk, O, {Pi(1), Si}) measures
+	//   32 + 74*45 + 45*(74*75/2) + 45*(74*45)
+	//   = 32 + 3,330 + 124,875 + 149,850 = 278,087 B,
+	// which is the figure in that table's |esk| column. The arithmetic is the
+	// check: a size typed in from a table can be mistyped, one derived from the
+	// parameter set cannot disagree with it silently. Round 2 was (112, 44) and
+	// 237,896 B by the same formula.
 	it('uov-Ip expanded secret key agrees with the size formula', () => {
-		const v = 112 - 44;
-		const m = 44;
+		const v = 119 - 45;
+		const m = 45;
 		const esk = 32 + v * m + m * ((v * (v + 1)) / 2) + m * (v * m);
-		expect(esk).toBe(237896);
+		expect(esk).toBe(278087);
 		expect(findScheme('UOV (uov-Ip)').secretKey).toBe(esk);
 		// The expanded public key is the same arithmetic over n: m * n(n+1)/2.
-		expect(findScheme('UOV (uov-Ip)').pubKey).toBe(m * ((112 * 113) / 2));
+		expect(findScheme('UOV (uov-Ip)').pubKey).toBe(m * ((119 * 120) / 2));
+		expect(findScheme('UOV (uov-Ip)').pubKey).toBe(321300);
 	});
 
-	// The round label and the numbers have to travel together. These are the
-	// Round-2 figures (specification version 2.0, February 2025); the Round-3
-	// submission moves uov-Ip to (119, 45): 321,300 / 278,087 / 135 B. Labelling
-	// the row "Round 3" while printing (112, 44) sizes is how it drifted before,
-	// so the label is pinned to the parameter set it actually describes, and the
-	// note must still say UOV is a live Round-3 candidate and what Round 3 gives.
+	// The round label and the numbers have to travel together, which is the only
+	// thing this pins -- not which round. The row carried Round-2 figures under a
+	// "Round 2" label until 2026-11-18 and now carries Round-3 figures under a
+	// "Round 3" one; labelling it "Round 3" while printing (112, 44) sizes is the
+	// drift this exists to catch, and so is the reverse. The note must still say
+	// UOV is a live Round-3 candidate and must still record what Round 2 gave, so
+	// a reader meeting the old numbers elsewhere can place them.
 	it('the UOV row labels the round its sizes come from', () => {
 		const s = findScheme('UOV (uov-Ip)');
-		expect(s.standard).toBe('Additional-signature Round 2 sizes');
-		expect(s.pubKey).toBe(278432);
-		expect(s.output).toBe(128); // signature
-		expect(s.note).toMatch(/Round-2 specification \(version 2\.0, February 2025\)/);
+		expect(s.standard).toBe('Additional-signature Round 3 sizes');
+		expect(s.pubKey).toBe(321300);
+		expect(s.output).toBe(135); // signature
+		expect(s.note).toMatch(/Round-3 specification \(version 3\.0, 30 August 2026\)/);
+		expect(s.note).toMatch(/\(112, 44\) with 278,432 \/ 237,896 \/ 128 B/);
 		expect(s.note).toMatch(/still in NIST\u2019s additional-signature Round 3/);
 		expect(s.note).toMatch(/\(119, 45\)/);
 		expect(s.note).toMatch(/321,300 B/);
@@ -389,11 +395,19 @@ describe('additional-signature Round 3 is dated to its primary source', () => {
 		}
 	});
 
-	// Round 3 dates the PROCESS, not the parameters: UOV still prints its
-	// Round-2 sizes and still says so. Advancing the label without the numbers
-	// is the drift this pins against.
-	it('dating Round 3 does not relabel the UOV parameter set', () => {
-		expect(findScheme('UOV (uov-Ip)').standard).toBe('Additional-signature Round 2 sizes');
+	// The label and the parameter set move together or not at all. This used to
+	// pin the Round-2 label while Round 3 was only a date in the prose; the sizes
+	// have since moved, so it pins the agreement rather than the round: whatever
+	// the label says, the public key must be the size that label's own Table 1
+	// gives.
+	it('the UOV label and its parameter set agree', () => {
+		const s = findScheme('UOV (uov-Ip)');
+		const byRound: Record<string, number> = {
+			'Additional-signature Round 2 sizes': 278432,
+			'Additional-signature Round 3 sizes': 321300,
+		};
+		expect(Object.keys(byRound)).toContain(s.standard);
+		expect(s.pubKey).toBe(byRound[s.standard]);
 	});
 });
 
