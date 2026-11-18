@@ -274,6 +274,7 @@ function renderExplorer(): HTMLElement {
           ${s.performance ? `<p class="panel-copy panel-perf"><strong>Performance:</strong> ${s.performance}</p>` : ''}
           ${s.cyclesNote ? `<p class="panel-bench"><span class="panel-bench-label">Cycles:</span> ${s.cyclesNote}</p>` : ''}
           <p class="panel-copy">${s.note}</p>
+          ${s.name === 'SQIsign' ? `<p class="panel-copy"><strong>Non-standard research format:</strong> Dustin Ray (Anchorage Digital), <a href="https://github.com/anchorageoss/sqisign-rs/blob/7a4a01bb8108f4d0c0726112cc7d3eaef8053439/paper-dim4/main_standalone.pdf">Dimension-4 SQIsign at Round-3 Parameters: Sizes and Costs of the Compact Format</a> (IACR ePrint 2026/2221, September 2026), reports a 142-byte level-I signature versus 200 bytes in the specification, with an 84-byte public key. The format uses SQIsignHD’s dimension-4 response at the round-3 primes, which replaced the round-2 primes in September 2026 after attacks by Wesolowski and others. In the same code, verification took 120.3 megacycles versus 12.2 for dimension 2 (9.9 times as many). This preprint describes a format outside the NIST submission.</p>` : ''}
           <button type="button" class="pin-btn ${isPinned ? 'is-pinned' : ''}" data-pin="${s.name}" aria-pressed="${isPinned}">
             <span aria-hidden="true">${isPinned ? '\ud83d\udccd' : '\ud83d\udccc'}</span>
             <span>${isPinned ? 'Pinned' : 'Pin to compare'}</span>
