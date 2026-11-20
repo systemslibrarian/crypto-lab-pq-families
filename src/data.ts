@@ -490,8 +490,8 @@ export const FAMILIES: Family[] = [
 			{
 				year: 2026,
 				name: 'SLH-DSA-SHA-2 power analysis',
-				venue: 'ePrint 2026/2753 (November 4; preprint, physical power analysis)',
-				summary: 'Chang et al. report non-profiled correlation power analysis of the address-based pseudorandom function for all six SHA-2 SLH-DSA parameter sets on an STM32F303 Cortex-M4. They measured 5,000 traces per seed under each evaluated condition and targeted both SHA-256 compression rounds and message-schedule expansion. Their success rates are conditional stage-wise results with required preceding secret values supplied correctly, not demonstrated end-to-end full-seed recovery. This requires physical power access; it is not a mathematical break of SLH-DSA or SHA-2, and this browser comparison does not reproduce the experiment.',
+				venue: 'ePrint 2026/2753 (revised November 20; preprint, physical power analysis)',
+				summary: 'Chang et al., revised 20 November 2026: preprint; attack-model-conditional physical power analysis on STM32F303 Cortex-M4. The baseline reports conditional stage-wise recovery with preceding secrets supplied correctly. The revision also chains recovered values: WOTS+ compression-round CPA recovers the full seed in all nine seed–signature cases per parameter set (three seeds, three signatures each). Measurements use individual PRF calls, not continuous signing traces; call identification and segmentation remain unvalidated. This is not a mathematical break of SLH-DSA or SHA-2, and this browser comparison does not reproduce the experiment.',
 			},
 		],
 		references: [
@@ -549,7 +549,7 @@ export const FAMILIES: Family[] = [
 				authors: 'Chang, Lee, Min and Han',
 				year: 2026,
 				title: 'Correlation Power Analysis on SHA-2-Based SLH-DSA',
-				venue: 'ePrint 2026/2753; preprint, published 4 November 2026',
+				venue: 'ePrint 2026/2753; preprint, published 4 November, revised 20 November 2026',
 				url: 'https://eprint.iacr.org/2026/2753',
 			},
 		],
