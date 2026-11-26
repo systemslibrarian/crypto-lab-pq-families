@@ -259,7 +259,11 @@ export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
   ).toBe(true);
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   if (theme === 'light') {
-    await page.getByRole('button', { name: 'Switch to light mode' }).click();
+    const toggle = page.locator('#theme-toggle');
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-label', 'Switch to light mode');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-label', 'Switch to dark mode');
   }
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
   await assertSingleBanner(page);
