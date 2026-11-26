@@ -249,7 +249,7 @@ export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
   // test timeout and reports nothing useful. 20s turns that silent hang into a
   // named failure naming the locator.
   page.setDefaultTimeout(20_000);
-  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.emulateMedia({ media: 'screen', reducedMotion: 'reduce' });
   /* Not page.goto: a suite that navigates and starts asserting cannot
    * tell this lab's server from anyone else's. See e2e/identity.ts. */
   await assertThisLab(page, '.');
@@ -257,6 +257,7 @@ export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
     await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches),
     'reduced-motion emulation must actually be in effect'
   ).toBe(true);
+  expect(await page.evaluate(() => matchMedia('screen').matches), 'the student UI must be audited as screen media').toBe(true);
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   if (theme === 'light') {
     const toggle = page.locator('#theme-toggle');
