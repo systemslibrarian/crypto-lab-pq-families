@@ -792,6 +792,18 @@
     transform: none;
     transition: none;
   }
+
+  /* Reduced motion must not remove the student's non-animated page controls. */
+  .hero-actions {
+    display: flex !important;
+    visibility: visible !important;
+  }
+
+  .theme-toggle {
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
 }
 
 /* hero actions (copy-link + theme toggle) */
