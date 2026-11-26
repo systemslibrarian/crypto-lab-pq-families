@@ -702,8 +702,8 @@ export const FAMILIES: Family[] = [
 			},
 			{
 				authors: 'Beullens, Chen, Ding, Gong, Kannwischer, Patarin, Peng, Schmidt, Shih, Tao, Yang',
-				year: 2025,
-				title: 'UOV: Unbalanced Oil and Vinegar, specification version 2.0',
+				year: 2026,
+				title: 'UOV: Unbalanced Oil and Vinegar, specification version 3.0',
 				venue: 'Additional-signature Round 3 submission, 30 August 2026 \u2014 Table 1 is the source of the uov-Ip sizes above',
 				url: 'https://csrc.nist.gov/csrc/media/Projects/pqc-dig-sig/documents/UOV_Specification_R3.pdf',
 			},

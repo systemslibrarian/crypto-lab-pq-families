@@ -172,6 +172,14 @@ describe('canonical FIPS scheme sizes (exact)', () => {
 		expect(findScheme('SQIsign').standard).toBe('Additional-signature Round 3 candidate');
 	});
 
+	it('the UOV source card identifies the linked Round-3 specification', () => {
+		const multivariate = FAMILIES.find((f) => f.id === 'multivariate')!;
+		const source = multivariate.references.find((r) => r.url?.endsWith('UOV_Specification_R3.pdf'))!;
+		expect(source.year).toBe(2026);
+		expect(source.title).toMatch(/specification version 3\.0/);
+		expect(source.venue).toMatch(/Round 3 submission, 30 August 2026/);
+	});
+
 	// Classical baseline dwarfed by every PQC scheme.
 	it('X25519 + ECDSA P-256 baseline', () => {
 		expect(CLASSICAL_BASELINE.kemPub).toBe(32);
