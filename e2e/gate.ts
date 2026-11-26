@@ -230,12 +230,11 @@ export const HIDDEN_PANELS = [
  * it off, so a scan of the un-scrolled document would measure a page that is
  * one hero and twelve blank rectangles.
  *
- * The theme is seeded through `localStorage` rather than by clicking a toggle,
- * which also pins down a real failure mode: `index.html`'s anti-flash script
- * reads `localStorage.getItem('theme')`, the shared bar's `#cl-theme-toggle`
- * writes it, and this lab's own `#theme-toggle` in `main.ts` writes it again. If
- * any of the three drifted apart the theme would silently stop persisting, and
- * this boot fails on `data-theme` rather than quietly scanning dark twice.
+ * `index.html` deliberately boots dark and clears an old stored light choice.
+ * Light mode is therefore selected through the same visible `#theme-toggle`
+ * students use. This keeps the audit honest: it proves that the control is
+ * actionable and that the requested theme is actually rendered instead of
+ * quietly scanning dark twice.
  *
  * The defaults are asserted at length because five separate exhibits here ship
  * in a chosen state that a single-configuration gate would scan as if it were
@@ -251,7 +250,6 @@ export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
   // named failure naming the locator.
   page.setDefaultTimeout(20_000);
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.addInitScript((t) => localStorage.setItem('theme', t), theme);
   /* Not page.goto: a suite that navigates and starts asserting cannot
    * tell this lab's server from anyone else's. See e2e/identity.ts. */
   await assertThisLab(page, '.');
@@ -259,6 +257,10 @@ export async function boot(page: Page, theme: 'dark' | 'light'): Promise<void> {
     await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches),
     'reduced-motion emulation must actually be in effect'
   ).toBe(true);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  if (theme === 'light') {
+    await page.getByRole('button', { name: 'Switch to light mode' }).click();
+  }
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
   await assertSingleBanner(page);
 
