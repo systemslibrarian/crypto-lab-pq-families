@@ -793,17 +793,6 @@
     transition: none;
   }
 
-  /* Reduced motion must not remove the student's non-animated page controls. */
-  .hero-actions {
-    display: flex !important;
-    visibility: visible !important;
-  }
-
-  .theme-toggle {
-    display: grid !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-  }
 }
 
 /* hero actions (copy-link + theme toggle) */
@@ -2402,6 +2391,21 @@ html[data-audience='executive'] .lab-section[data-audience~='executive']::before
   .lamport-grid,
   .lat-svg {
     display: none !important;
+  }
+}
+
+/* Keep this after the print rules so a reduced-motion screen audit cannot
+   inherit the handout-only control suppression through the cascade. */
+@media screen and (prefers-reduced-motion: reduce) {
+  .hero-actions {
+    display: flex !important;
+    visibility: visible !important;
+  }
+
+  .theme-toggle {
+    display: grid !important;
+    visibility: visible !important;
+    opacity: 1 !important;
   }
 }
 
