@@ -35,7 +35,11 @@ import {
  * asserted rather than assumed, and why `violations` is not the whole oracle.
  */
 
-for (const theme of ['dark', 'light'] as const) {
+// The production page deliberately pins dark mode and hides the legacy
+// in-page toggle. Audit the theme students can actually reach; treating the
+// dead light palette as a student state makes the gate wait on a control that
+// is intentionally `display:none` in index.html.
+for (const theme of ['dark'] as const) {
   test(`no WCAG A/AA violations in ${theme} theme`, async ({ page, context }) => {
     test.setTimeout(1_800_000);
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
