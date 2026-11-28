@@ -2228,7 +2228,7 @@ const RECOMMENDATIONS: Record<string, Recommendation> = {
 		kem: 'Classic McEliece 348864',
 		hybrid: false,
 			rationale: 'McEliece ciphertexts are tiny (~96 B) and a code-based assumption adds diversity, but a 2026 preprint estimates structural key recovery below generic ISD costs.',
-			caveat: 'The public key is ~255 KB; the new estimates use heuristics and do not show a practical production break. Evaluate both before deployment.',
+			caveat: 'The public key is 255 KiB; the new estimates use heuristics and do not show a practical production break. Evaluate both before deployment.',
 	},
 	'kem:pk': {
 		kem: 'ML-KEM-768 (Kyber)',

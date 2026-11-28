@@ -280,10 +280,12 @@ describe('corpus structural invariants', () => {
 });
 
 describe('formatBytes', () => {
-	it('renders bytes, KB, and MB with stable rounding', () => {
-		expect(formatBytes(96)).toMatch(/96/);
-		// 261,120 B is the McEliece public key — should read in KB.
-		expect(formatBytes(261120)).toMatch(/KB|kB/i);
+	it('labels binary multiples as KiB and keeps smaller values in bytes', () => {
+		expect(formatBytes(0)).toBe('0 B');
+		expect(formatBytes(1023)).toBe('1023 B');
+		expect(formatBytes(1024)).toBe('1.0 KiB');
+		expect(formatBytes(1536)).toBe('1.5 KiB');
+		expect(formatBytes(261120)).toBe('255 KiB');
 	});
 });
 

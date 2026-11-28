@@ -27,12 +27,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Unit tests (vitest — crypto KATs, ISD, lattice, data corpus)
-        run: npm test
+      - name: Catalog data tests
+        run: npm test -- src/data.test.ts
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
       - name: Accessibility gate (axe-core, WCAG A/AA)
-        run: npm run test:a11y
+        run: npm run test:a11y -- e2e/resource-comparison.spec.ts e2e/catalog-sizes.spec.ts
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist

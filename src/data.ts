@@ -920,8 +920,8 @@ export const MATURITY_LABEL: Record<Maturity, string> = {
 
 export function formatBytes(n: number): string {
 	if (n >= 1024) {
-		const kb = n / 1024;
-		return `${kb >= 100 ? kb.toFixed(0) : kb.toFixed(1)} KB`;
+		const kib = n / 1024;
+		return `${kib >= 100 ? kib.toFixed(0) : kib.toFixed(1)} KiB`;
 	}
 	return `${n} B`;
 }
