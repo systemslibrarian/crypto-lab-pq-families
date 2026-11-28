@@ -614,7 +614,7 @@ const BREAK_LABS: Record<
 	},
 };
 
-// Bytes-on-wire for the classical TLS 1.3 baseline:
+// Raw cryptographic component lengths for the classical comparison:
 //   client_key_share (kemPub) + server_key_share (kemOut)
 // + server leaf cert pubkey + leaf cert signature
 // + (chainDepth) × (intermediate cert pubkey + intermediate cert signature)
@@ -651,11 +651,12 @@ function renderHandshakeCalculator(): HTMLElement {
         <p class="section-kicker">Try it</p>
         <h2>Handshake Bytes</h2>
         <p class="section-footnote">
-          Pick a KEM and a signature — the bar shows the bytes a TLS 1.3 handshake spends, compared with the X25519 + ECDSA P-256 baseline.
+          Compare the raw key and signature sizes of your choices with an X25519 + ECDSA P-256 baseline. An encoded TLS handshake also carries certificates, extensions and framing.
+        </p>
           <details class="inline-details"><summary>How the segments break down</summary>
             <p><em>Client key share</em> + <em>server key share</em> + <em>server cert public key</em> + <em>cert chain signature</em> + <em>transcript signature</em>. The chain-depth control adds intermediate certs (pk + sig each).</p>
+            <p>The classical model counts two 32-byte X25519 shares, a 64-byte P-256 public coordinate pair, and two 64-byte ECDSA scalar pairs. With no intermediate certificates, that is 256 raw bytes. Real TLS uses encoded keys and DER-encoded ECDSA signatures, whose lengths can vary. <a href="https://www.rfc-editor.org/rfc/rfc8446.html#section-4.4.3">TLS 1.3 CertificateVerify</a>.</p>
           </details>
-        </p>
       </div>
     </div>
 
@@ -897,7 +898,7 @@ function renderHandshakeCalculator(): HTMLElement {
 			kem.maturity === 'broken' || sig.maturity === 'broken'
 				? `<strong class="hs-note-warn">\u26a0 One of these schemes is broken \u2014 shown for comparison only.</strong> `
 				: '';
-		noteHost.innerHTML = `${brokenWarn}This handshake spends <strong>${formatBytes(pqcTotal)}</strong> on key exchange and authentication \u2014 about <strong>${ratioText}\u00d7</strong> the classical baseline (<strong>${formatBytes(classical)}</strong>).${state.hybrid ? ' Hybrid byte counts do not establish security: preserving it when one component fails requires a robust combiner, authenticated binding and downgrade resistance.' : ''}`;
+		noteHost.innerHTML = `${brokenWarn}The selected cryptographic components total <strong>${formatBytes(pqcTotal)}</strong> \u2014 about <strong>${ratioText}\u00d7</strong> the classical baseline (<strong>${formatBytes(classical)}</strong>).${state.hybrid ? ' Hybrid byte counts do not establish security: preserving it when one component fails requires a robust combiner, authenticated binding and downgrade resistance.' : ''}`;
 
 		paintBrokenPanel([
 			{ role: 'KEM', family: kemPick.family, scheme: kem },
